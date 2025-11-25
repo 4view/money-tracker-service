@@ -23,5 +23,5 @@ public class Expense
     /// <summary>
     /// Категория покупки
     /// </summary>
-    public Category Category { get; set; }    
+    public required Category Category { get; set; }    
 }

@@ -10,12 +10,12 @@ public class ExpenseEntity
     /// <summary>
     /// Id категории покупки
     /// </summary>
-    public Guid CategoryId { get; init; }
+    public Guid CategoryId { get; set; }
 
     /// <summary>
     /// Ссылка на объект категории
     /// </summary>
-    public CategoryEntity Category { get; set; } 
+    public CategoryEntity Category { get; set; } = null!;
     
     /// <summary>
     /// Время покупки

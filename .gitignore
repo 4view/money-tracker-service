@@ -3,6 +3,10 @@
 ##
 ## Get latest from `dotnet new gitignore`
 
+.bruno/**/*
+.bruno/*
+.bruno/
+
 # dotenv files
 .env
 

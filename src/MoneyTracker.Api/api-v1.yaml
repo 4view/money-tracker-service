@@ -1,0 +1,567 @@
+openapi: 3.0.4
+info:
+  title: API сервиса money-tracker
+  description: |-
+    API, позволяющее управлять расходами денежных средств
+  version: 1.0.0
+tags:
+  - name: category
+    description: Управление категориями расходов
+  - name: expenses
+    description: Управление расходами
+  - name: limits
+    description: Управление лимитами
+paths:
+  /api/category:
+    get:
+      tags:
+        - category
+      summary: Список всех существующих категорий
+      operationId: getAllCategories
+      responses:
+        '200':
+          description: Ответ со списком категорий
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Categories'
+        '500':
+          $ref: '#/components/responses/Error'
+    post:
+      tags:
+        - category
+      operationId: createCategory
+      summary: Добавление новой категории
+      requestBody:
+        $ref: '#/components/requestBodies/CategoryName'
+      responses:
+        '201':
+          description: Категория создана
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Category'
+        '400':
+          $ref: '#/components/responses/WrongCategoryName'
+        '409':
+          $ref: '#/components/responses/CategoryConflict'
+        '500':
+          $ref: '#/components/responses/Error'
+  /api/category/{categoryId}:
+    parameters:
+      - name: categoryId
+        in: path
+        required: true
+        content:
+          text/plain:
+            schema:
+              type: string
+              example: a6adea94-e1a9-42e6-b097-a826b899512a
+    put:
+      tags:
+        - category
+      operationId: updateCategory
+      summary: Обновление категории
+      requestBody:
+        $ref: '#/components/requestBodies/CategoryName'
+      responses:
+        '204':
+          description: Категория обновлена
+        '400':
+          $ref: '#/components/responses/WrongCategoryName'
+        '404':
+          $ref: '#/components/responses/CategoryNotFound'
+        '409':
+          $ref: '#/components/responses/CategoryConflict'
+        '500':
+          $ref: '#/components/responses/Error'
+          
+    delete:
+      tags:
+        - category
+      operationId: deleteCategory
+      summary: Удаление категории
+      responses:
+        '204':
+          description: Категория удалена
+        '400':
+          description: В системе есть расходы, имеющие эту категорию
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '404':
+          $ref: '#/components/responses/CategoryNotFound'
+        '500':
+          $ref: '#/components/responses/Error'
+  /api/expense:
+    get:
+      tags:
+        - expenses
+      summary: |-
+        Список расходов за указанный период от старых в начале
+        к новым в конце
+      operationId: getExpenses
+      parameters:
+        - name: from
+          description: Начальная дата расходов в формате unix timestamp (включительно)
+          in: query
+          required: true
+          content:
+            text/plain:
+              schema:
+                type: number
+                example: 1754208108
+        - name: to
+          description: |-
+            Конечная дата расходов в формате unix timestamp 
+            (все траты ДО этого значения, т.е. не включительно)
+          in: query
+          required: true
+          content:
+            text/plain:
+              schema:
+                type: number
+                example: 1754208174
+      responses:
+        '200':
+          description: Ответ со списком расходов от старых к новым
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Expenses'
+        '500':
+          $ref: '#/components/responses/Error'
+    post:
+      tags:
+        - expenses
+      operationId: createExpense
+      summary: Заведение нового расхода
+      requestBody:
+        $ref: '#/components/requestBodies/Expense'
+      responses:
+        '201':
+          description: Расход заведён
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Expense'
+        '400':
+          $ref: '#/components/responses/WrongExpense'
+        '500':
+          $ref: '#/components/responses/Error'
+  /api/expense/{expenseId}:
+    parameters:
+      - name: expenseId
+        in: path
+        required: true
+        content:
+          text/plain:
+            schema:
+              type: string
+              description: Уникальный идентификатор расхода
+              example: a6adea94-e1a9-42e6-b097-a826b899512a
+    put:
+      tags:
+        - expenses
+      operationId: updateExpense
+      summary: Обновление расхода
+      requestBody:
+        $ref: '#/components/requestBodies/Expense'
+      responses:
+        '204':
+          description: Категория обновлена
+        '400':
+          $ref: '#/components/responses/WrongExpense'
+        '404':
+          $ref: '#/components/responses/ExpenseNotFound'
+        '500':
+          $ref: '#/components/responses/Error'
+    delete:
+      tags:
+        - expenses
+      operationId: deleteExpense
+      summary: Удаляет расход
+      responses:
+        '204':
+          description: Расход удалён
+        '404':
+          $ref: '#/components/responses/ExpenseNotFound'
+        '500':
+          $ref: '#/components/responses/Error'
+  /api/limit:
+    get:
+      tags:
+        - limits
+      summary: Список всех лимитов
+      operationId: getAllLimits
+      responses:
+        '200':
+          description: Список всех лимитов
+          content:
+            application/json:
+              schema:
+                type: array
+                description: Список лимитов
+                items: 
+                  $ref: '#/components/schemas/Limit'
+        '500':
+          $ref: '#/components/responses/Error'
+    post:
+      tags:
+        - limits
+      operationId: createLimit
+      summary: Добавление лимита по категории
+      requestBody:
+        $ref: '#/components/requestBodies/Limit'
+      responses:
+        '201':
+          description: Лимит создан
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Limit'
+        '400':
+          $ref: '#/components/responses/WrongExpense'
+        '500':
+          $ref: '#/components/responses/Error'
+  /api/limit/{limitId}:
+    parameters:
+      - $ref: '#/components/parameters/LimitId'
+    put:
+      tags:
+        - limits
+      operationId: updateLimit
+      summary: Обновление лимита
+      requestBody:
+        $ref: '#/components/requestBodies/LimitToUpdate'
+      responses:
+        '204':
+          description: Категория обновлена
+        '400':
+          $ref: '#/components/responses/WrongLimit'
+        '404':
+          $ref: '#/components/responses/LimitNotFound'
+        '500':
+          $ref: '#/components/responses/Error'
+    delete:
+      tags:
+        - limits
+      operationId: deleteLimit
+      summary: Удаление лимита
+      responses:
+        '204':
+          description: Лимит удалён
+        '404':
+          $ref: '#/components/responses/LimitNotFound'
+        '500':
+          $ref: '#/components/responses/Error'
+  /api/limit/{limitId}/calculate:
+    parameters:
+      - $ref: '#/components/parameters/LimitId'
+    get:
+      tags:
+        - limits
+      summary: |-
+        Лимит по расходам для указанной категории за указанный период
+      operationId: calculateLimit
+      parameters:
+        - name: categoryId
+          description: Уникальный идентификатор категории расходов
+          in: query
+          required: true
+          content:
+            text/plain:
+              schema:
+                type: string
+                description: Уникальный идентификатор категории
+                example: a6adea94-e1a9-42e6-b097-a826b899512a
+        - name: from
+          description: Начальная дата расходов в формате unix timestamp (включительно)
+          in: query
+          required: true
+          content:
+            text/plain:
+              schema:
+                type: number
+                description: Уникальный идентификатор категории
+                example: 1754208108
+        - name: to
+          description: |-
+            Конечная дата расходов в формате unix timestamp 
+            (все траты ДО этого значения, т.е. не включительно)
+          in: query
+          required: true
+          content:
+            text/plain:
+              schema:
+                type: number
+                example: 1754208174
+      responses:
+        '200':
+          description: |- 
+            Данные о лимите за указанный диапазон для указанной категории
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CalculatedLimit'
+        '404':
+          $ref: '#/components/responses/LimitNotFound'
+        '500':
+          $ref: '#/components/responses/Error'
+components:
+  schemas:
+    Categories:
+      title: Список категорий
+      type: array
+      items:
+        $ref: '#/components/schemas/Category'
+    Category:
+      title: Полная информация о категории трат
+      type: object
+      properties:
+        id:
+          type: string
+          example: a6adea94-e1a9-42e6-b097-a826b899512a
+        name:
+          type: string
+          example: Питание
+      required:
+        - id
+        - name
+    CategoryName:
+      title: Название категории трат
+      type: object
+      properties:
+        name:
+          type: string
+          example: Питание
+      required:
+        - name
+    Expense:
+      title: Полная информация о расходе
+      properties:
+        id:
+          type: string
+          example: a6adea94-e1a9-42e6-b097-a826b899512a
+        categoryId:
+          type: string
+          example: a6adea94-e1a9-42e6-b097-a826b899512a
+        time:
+          type: integer
+          example: a6adea94-e1a9-42e6-b097-a826b899512a
+        sum:
+          type: number
+          example: 777777.97
+        description:
+          type: string
+          example: Сгамблил в казик
+      required: 
+        - id
+        - categoryId
+        - time
+        - sum
+    Expenses:
+      title: Список расходов
+      type: array
+      items:
+        $ref: '#/components/schemas/Expense'
+    ExpenseWithoutId:
+      title: Информация о расходе
+      properties:
+        categoryId:
+          type: string
+          example: a6adea94-e1a9-42e6-b097-a826b899512a
+        time:
+          type: integer
+          example: a6adea94-e1a9-42e6-b097-a826b899512a
+        sum:
+          type: number
+          example: 777777.97
+        description:
+          type: string
+          example: Сгамблил в казик
+      required: 
+        - categoryId
+        - time
+        - sum
+    CalculatedLimit:
+      title: Полная информация о лимите
+      type: object
+      properties:
+        id:
+          type: string
+          description: Уникальный идентификатор лимита
+          example: a6adea94-e1a9-42e6-b097-a826b899512a
+        categoryId:
+          type: string
+          description: Уникальный идентификатор категории
+          example: a6adea94-e1a9-42e6-b097-a826b899512a
+        limit:
+          type: number
+          description: Величина лимита
+          example: 100000.00
+        remaining:
+          type: number
+          description: Кол-во свободных средств по лимиту в пределах периода
+          example: 13912.87
+      required:
+        - id
+        - categoryId
+        - limit
+        - remaining
+    Limit:
+      title: Полная информация о лимите
+      type: object
+      properties:
+        id:
+          type: string
+          description: Уникальный идентификатор лимита
+        categoryId:
+          type: string
+          description: Уникальный идентификатор категории
+          example: a6adea94-e1a9-42e6-b097-a826b899512a
+        limit:
+          type: number
+          description: Величина лимита
+          example: 100000.00
+      required:
+        - id
+        - categoryId
+        - limit
+    LimitWithoutId:
+      title: Информация о лимите
+      type: object
+      properties:
+        categoryId:
+          type: string
+          description: Уникальный идентификатор категории
+          example: a6adea94-e1a9-42e6-b097-a826b899512a
+        limit:
+          type: number
+          description: Величина лимита
+          example: 100000.00
+      required:
+        - categoryId
+        - limit
+    LimitSize:
+      title: Величина лимита
+      type: object
+      properties:
+        limit:
+          type: number
+          description: Величина лимита
+          example: 100000.00
+      required:
+        - limit
+    Error:
+      title: Ошибка выполнения запроса
+      type: object
+      required:
+        - code
+        - message
+      properties:
+        code:
+          type: string
+          description: Код HTTP ответа
+          format: int64
+          example: <Код>
+        message:
+          type: string
+          description: Сообщение об ошибке
+          example: <Сообщение>
+  parameters:
+    LimitId:
+      name: limitId
+      description: Уникальный идентификатор лимита
+      in: path
+      required: true
+      content:
+        text/plain:
+          schema:
+            type: string
+            description: Уникальный идентификатор лимита
+            example: a6adea94-e1a9-42e6-b097-a826b899512a
+      
+  requestBodies:
+    CategoryName:
+      description: Имя категории
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/CategoryName'
+    Expense:
+      description: Информация о расходе
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ExpenseWithoutId'
+    Limit:
+      description: Информация о лимите
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/LimitWithoutId'
+    LimitToUpdate:
+      description: Информация о лимите
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/LimitSize'
+  responses:
+    CategoryConflict:
+      description: Категория с указанным имененем уже существует
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+    WrongCategoryName:
+      description: Задано недопустимое имя для категории
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+    CategoryNotFound:
+      description: Категория не найдена
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+    WrongExpense:
+      description: Недопустимые данные о расходе
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+    ExpenseNotFound:
+      description: Информация о расходе не найдена
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+    WrongLimit:
+      description: |- 
+        Верхняя планка расходов по лимиту указана неверно, или же лимит
+        ссылается на несуществующую категорию
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+    LimitNotFound:
+      description: Информация о лимите не найдена
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+    LimitConflict:
+      description: Лимит для указанной категории уже существует
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+    Error:
+      description: Ошибка выполнения запроса
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
