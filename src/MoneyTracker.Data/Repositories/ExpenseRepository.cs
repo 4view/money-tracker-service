@@ -1,38 +1,74 @@
-using System.Net;
-
 namespace MoneyTracker.Data.Repositories;
 
 public class ExpenseRepository : IExpenseRepository
 {
     private readonly ApplicationDbContext _db;
+    private readonly IHttpContextAccessor _httpContextAccessor;
 
-    public ExpenseRepository(ApplicationDbContext context)
+    public ExpenseRepository(ApplicationDbContext context, IHttpContextAccessor httpContextAccessor)
     {
         _db = context;
+        _httpContextAccessor = httpContextAccessor;
     }
 
-    public async Task<List<ExpenseDto>> GetExpenseByTimeAsync(long startDate, long endDate, CancellationToken ct)
+    private Guid GetCurrentUserId()
     {
+        var userIdClaim = _httpContextAccessor.HttpContext?.User?.FindFirst(
+            ClaimTypes.NameIdentifier
+        );
+        if (userIdClaim == null)
+            throw new ResponseException(ErrorType.Validation, "Пользователь не авторизован");
 
-        var expense = await _db.Set<ExpenseEntity>()
+        return Guid.Parse(userIdClaim.Value);
+    }
+
+    public async Task<List<ExpenseDto>> GetExpenseByTimeAsync(
+        Guid userId,
+        long startDate,
+        long endDate,
+        CancellationToken ct
+    )
+    {
+        var expenses = await _db.Set<ExpenseEntity>()
+            .Where(e => e.UserId == userId)
             .Where(e => e.TimeUnix >= startDate && e.TimeUnix < endDate)
             .OrderBy(e => e.TimeUnix)
             .Select(e => new ExpenseDto
-            {        
+            {
                 Id = e.Id,
-                CategoryId = e.CategoryId,        
+                CategoryId = e.CategoryId,
                 Time = e.TimeUnix,
                 Description = e.Description,
-                Sum = e.Sum
-            }).ToListAsync(ct);
+                Sum = e.Sum,
+            })
+            .ToListAsync(ct);
 
-        return expense;
+        return expenses;
     }
 
-    public async Task<ExpenseEntity> AddExpenseAsync(ExpenseDto dto, CancellationToken ct)
+    public async Task<decimal> GetSumByCategoryAndPeriodAsync(
+        Guid userId,
+        Guid categoryId,
+        long from,
+        long to,
+        CancellationToken ct
+    )
+    {
+        return await _db.Set<ExpenseEntity>()
+            .Where(e => e.UserId == userId)
+            .Where(e => e.CategoryId == categoryId)
+            .Where(e => e.TimeUnix >= from && e.TimeUnix < to)
+            .SumAsync(e => e.Sum, ct);
+    }
+
+    public async Task<ExpenseEntity> AddExpenseAsync(
+        Guid userId,
+        ExpenseDto dto,
+        CancellationToken ct
+    )
     {
         var expenseCategory = await _db.Set<CategoryEntity>()
-            .FirstOrDefaultAsync(c => c.Id == dto.CategoryId, ct);
+            .FirstOrDefaultAsync(c => c.Id == dto.CategoryId && c.UserId == userId, ct);
 
         if (expenseCategory == null)
         {
@@ -46,10 +82,13 @@ public class ExpenseRepository : IExpenseRepository
 
         var newExpense = new ExpenseEntity
         {
+            Id = Guid.NewGuid(),
             CategoryId = expenseCategory.Id,
+            Category = expenseCategory,
             TimeUnix = dto.Time,
             Sum = dto.Sum,
-            Description = dto.Description
+            Description = dto.Description,
+            UserId = userId,
         };
 
         await _db.Set<ExpenseEntity>().AddAsync(newExpense, ct);
@@ -58,10 +97,10 @@ public class ExpenseRepository : IExpenseRepository
         return newExpense;
     }
 
-    public async Task DeleteExpenseAsync(Guid id, CancellationToken ct)
+    public async Task DeleteExpenseAsync(Guid userId, Guid id, CancellationToken ct)
     {
         var expense = await _db.Set<ExpenseEntity>()
-            .FirstOrDefaultAsync(e => e.Id == id, ct);
+            .FirstOrDefaultAsync(e => e.Id == id && e.UserId == userId, ct);
 
         if (expense == null)
         {
@@ -72,10 +111,15 @@ public class ExpenseRepository : IExpenseRepository
         await _db.SaveChangesAsync(ct);
     }
 
-    public async Task<ExpenseDto> UpdateExpenseAsync(Guid id, ExpenseDto dto, CancellationToken ct)
+    public async Task<ExpenseDto> UpdateExpenseAsync(
+        Guid userId,
+        Guid id,
+        ExpenseDto dto,
+        CancellationToken ct
+    )
     {
         var expense = await _db.Set<ExpenseEntity>()
-            .FirstOrDefaultAsync(e => e.Id == id, ct);
+            .FirstOrDefaultAsync(e => e.Id == id && e.UserId == userId, ct);
 
         if (expense == null)
         {
@@ -83,7 +127,7 @@ public class ExpenseRepository : IExpenseRepository
         }
 
         var category = await _db.Set<CategoryEntity>()
-            .FirstOrDefaultAsync(c => c.Id == dto.CategoryId, ct);
+            .FirstOrDefaultAsync(c => c.Id == dto.CategoryId && c.UserId == userId, ct);
 
         if (category == null)
         {
@@ -93,21 +137,70 @@ public class ExpenseRepository : IExpenseRepository
         expense.Sum = dto.Sum;
         expense.Description = dto.Description;
         expense.CategoryId = category.Id;
+        expense.Category = category;
         expense.TimeUnix = dto.Time;
-
-        var updatedExpenseFromDb = await _db.Set<ExpenseEntity>().FirstAsync(ct);
-
-        var result = new ExpenseDto
-        {
-            Id = id,
-            CategoryId = updatedExpenseFromDb.CategoryId,
-            Time = updatedExpenseFromDb.TimeUnix,
-            Description = updatedExpenseFromDb.Description,
-            Sum = updatedExpenseFromDb.Sum
-        };
 
         await _db.SaveChangesAsync(ct);
 
-        return result;
+        return new ExpenseDto
+        {
+            Id = id,
+            CategoryId = expense.CategoryId,
+            Time = expense.TimeUnix,
+            Description = expense.Description,
+            Sum = expense.Sum,
+        };
+    }
+
+    public async Task<CategoryEntity?> GetCategoryByNameAsync(
+        Guid userId,
+        string name,
+        CancellationToken ct
+    )
+    {
+        return await _db.Set<CategoryEntity>()
+            .FirstOrDefaultAsync(c => c.UserId == userId && c.Name.ToLower() == name.ToLower(), ct);
+    }
+
+    public async Task<CategoryEntity> GetOrCreateDefaultCategoryAsync(
+        Guid userId,
+        CancellationToken ct
+    )
+    {
+        const string defaultCategoryName = "Другое";
+
+        var defaultCategory = await _db.Set<CategoryEntity>()
+            .FirstOrDefaultAsync(c => c.UserId == userId && c.Name == defaultCategoryName, ct);
+
+        if (defaultCategory == null)
+        {
+            defaultCategory = new CategoryEntity
+            {
+                Id = Guid.NewGuid(),
+                Name = defaultCategoryName,
+                UserId = userId,
+            };
+
+            await _db.Set<CategoryEntity>().AddAsync(defaultCategory, ct);
+            await _db.SaveChangesAsync(ct);
+        }
+
+        return defaultCategory;
+    }
+
+    public async Task<decimal> GetSumByCategoryAndPeriodAsync(
+        Guid categoryId,
+        long from,
+        long to,
+        CancellationToken ct
+    )
+    {
+        var userId = GetCurrentUserId();
+
+        return await _db.Set<ExpenseEntity>()
+            .Where(e => e.UserId == userId)
+            .Where(e => e.CategoryId == categoryId)
+            .Where(e => e.TimeUnix >= from && e.TimeUnix < to)
+            .SumAsync(e => e.Sum, ct);
     }
 }

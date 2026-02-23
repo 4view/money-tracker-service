@@ -7,6 +7,10 @@ public class ExpenseEntity
     /// </summary>
     public Guid Id { get; init; }
 
+    public Guid UserId { get; set; }
+
+    public UserEntity User { get; set; } = null!;
+
     /// <summary>
     /// Id категории покупки
     /// </summary>
@@ -16,7 +20,7 @@ public class ExpenseEntity
     /// Ссылка на объект категории
     /// </summary>
     public CategoryEntity Category { get; set; } = null!;
-    
+
     /// <summary>
     /// Время покупки
     /// </summary>
@@ -26,9 +30,9 @@ public class ExpenseEntity
     /// Описание о затратах
     /// </summary>
     public string Description { get; set; } = string.Empty;
-    
+
     /// <summary>
-    /// Сумма покупки 
+    /// Сумма покупки
     /// </summary>
     public Decimal Sum { get; set; }
 }

@@ -2,10 +2,10 @@ namespace MoneyTracker.Api.Controllers;
 
 [ApiController]
 [Route("api/[controller]")]
+[Authorize]
 public class LimitController : Controller
 {
     private readonly ICategoryLimitRepository _repository;
-
     private readonly IErrorResponse _errorResponse;
 
     public LimitController(ICategoryLimitRepository repository, IErrorResponse errorResponse)
@@ -14,12 +14,23 @@ public class LimitController : Controller
         _errorResponse = errorResponse;
     }
 
+    private Guid GetCurrentUserId()
+    {
+        var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier);
+        if (userIdClaim == null || !Guid.TryParse(userIdClaim.Value, out var userId))
+        {
+            throw new UnauthorizedAccessException("Пользователь не авторизован");
+        }
+        return userId;
+    }
+
     [HttpGet]
     public async Task<IActionResult> GetAllLimits(CancellationToken ct)
     {
         try
         {
-            var limitsList = await _repository.GetAllLimitsAsync(ct);
+            var userId = GetCurrentUserId();
+            var limitsList = await _repository.GetAllLimitsAsync(userId, ct);
             return Ok(limitsList);
         }
         catch (Exception ex)
@@ -40,7 +51,9 @@ public class LimitController : Controller
     {
         try
         {
+            var userId = GetCurrentUserId();
             var categoryLimit = await _repository.GetCategoryLimitAsync(
+                userId,
                 limitId,
                 categoryId,
                 startDate,
@@ -58,11 +71,12 @@ public class LimitController : Controller
     }
 
     [HttpPost]
-    public async Task<IActionResult> AddCategoryLimit(BaseLimitDto dto, CancellationToken ct)
+    public async Task<IActionResult> AddCategoryLimit([FromBody] BaseLimitDto dto, CancellationToken ct)
     {
         try
         {
-            var categoryLimit = await _repository.AddCategoryLimitAsync(dto, ct);
+            var userId = GetCurrentUserId();
+            var categoryLimit = await _repository.AddCategoryLimitAsync(userId, dto, ct);
 
             return CreatedAtAction(
                 nameof(GetCategoryLimit),
@@ -80,13 +94,14 @@ public class LimitController : Controller
     [HttpPut("{limitId}")]
     public async Task<IActionResult> UpdateCategoryLimit(
         Guid limitId,
-        BaseLimitDto dto,
+        [FromBody] BaseLimitDto dto,
         CancellationToken ct
     )
     {
         try
         {
-            var updatedLimit = await _repository.UpdateCategoryLimitAsync(limitId, dto, ct);
+            var userId = GetCurrentUserId();
+            var updatedLimit = await _repository.UpdateCategoryLimitAsync(userId, limitId, dto, ct);
             return NoContent();
         }
         catch (Exception ex)
@@ -101,7 +116,8 @@ public class LimitController : Controller
     {
         try
         {
-            await _repository.DeleteCategoryLimitAsync(limitId, ct);
+            var userId = GetCurrentUserId();
+            await _repository.DeleteCategoryLimitAsync(userId, limitId, ct);
 
             return NoContent();
         }

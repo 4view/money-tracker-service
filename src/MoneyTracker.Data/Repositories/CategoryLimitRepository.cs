@@ -3,15 +3,32 @@ namespace MoneyTracker.Data.Repositories;
 public class CategoryLimitRepository : ICategoryLimitRepository
 {
     private readonly ApplicationDbContext _db;
+    private readonly IHttpContextAccessor _httpContextAccessor;
 
-    public CategoryLimitRepository(ApplicationDbContext _context)
+    public CategoryLimitRepository(
+        ApplicationDbContext context,
+        IHttpContextAccessor httpContextAccessor
+    )
     {
-        _db = _context;
+        _db = context;
+        _httpContextAccessor = httpContextAccessor;
     }
 
-    public async Task<List<AddedLimitDto>> GetAllLimitsAsync(CancellationToken ct)
+    private Guid GetCurrentUserId()
+    {
+        var userIdClaim = _httpContextAccessor.HttpContext?.User?.FindFirst(
+            ClaimTypes.NameIdentifier
+        );
+        if (userIdClaim == null)
+            throw new ResponseException(ErrorType.Validation, "Пользователь не авторизован");
+
+        return Guid.Parse(userIdClaim.Value);
+    }
+
+    public async Task<List<AddedLimitDto>> GetAllLimitsAsync(Guid userId, CancellationToken ct)
     {
         var limitsList = await _db.Set<CategoryLimitEntity>()
+            .Where(cl => cl.UserId == userId)
             .Select(cl => new AddedLimitDto
             {
                 Id = cl.Id,
@@ -24,6 +41,7 @@ public class CategoryLimitRepository : ICategoryLimitRepository
     }
 
     public async Task<ReturnedLimitDto> GetCategoryLimitAsync(
+        Guid userId,
         Guid limitId,
         Guid categoryId,
         long from,
@@ -31,7 +49,8 @@ public class CategoryLimitRepository : ICategoryLimitRepository
         CancellationToken ct
     )
     {
-        var category = await _db.Set<CategoryEntity>().FirstOrDefaultAsync(c => c.Id == categoryId);
+        var category = await _db.Set<CategoryEntity>()
+            .FirstOrDefaultAsync(c => c.Id == categoryId && c.UserId == userId, ct);
 
         if (category == null)
         {
@@ -39,20 +58,20 @@ public class CategoryLimitRepository : ICategoryLimitRepository
         }
 
         var categoryLimit = await _db.Set<CategoryLimitEntity>()
-            .FirstOrDefaultAsync(cl => cl.Id == limitId, ct);
+            .FirstOrDefaultAsync(cl => cl.Id == limitId && cl.UserId == userId, ct);
 
         if (categoryLimit == null)
         {
             throw new ResponseException(ErrorType.NotFound, $"Category limit not found");
         }
 
-        int year = DateTime.UtcNow.Year;
-        int month = DateTime.UtcNow.Month;
-
-        var spentAmount = await _db.Set<ExpenseEntity>()
-            .Where(e => e.Category.Id == categoryId)
-            .Where(e => e.TimeUnix >= from && e.TimeUnix < to)
-            .SumAsync(e => e.Sum, ct);
+        var expenseRepo = new ExpenseRepository(_db, _httpContextAccessor);
+        var spentAmount = await expenseRepo.GetSumByCategoryAndPeriodAsync(
+            categoryId,
+            from,
+            to,
+            ct
+        );
 
         var outputLimit = new ReturnedLimitDto
         {
@@ -65,13 +84,17 @@ public class CategoryLimitRepository : ICategoryLimitRepository
         return outputLimit;
     }
 
-    public async Task<AddedLimitDto> AddCategoryLimitAsync(BaseLimitDto dto, CancellationToken ct)
+    public async Task<AddedLimitDto> AddCategoryLimitAsync(
+        Guid userId,
+        BaseLimitDto dto,
+        CancellationToken ct
+    )
     {
         var category = await _db.Set<CategoryEntity>()
-            .FirstOrDefaultAsync(c => c.Id == dto.CategoryId, ct);
+            .FirstOrDefaultAsync(c => c.Id == dto.CategoryId && c.UserId == userId, ct);
 
         var existedLimit = await _db.Set<CategoryLimitEntity>()
-            .AnyAsync(cl => cl.Category.Id == dto.CategoryId);
+            .AnyAsync(cl => cl.Category.Id == dto.CategoryId && cl.UserId == userId, ct);
 
         if (existedLimit)
         {
@@ -85,7 +108,7 @@ public class CategoryLimitRepository : ICategoryLimitRepository
 
         if (dto.Limit <= 0)
         {
-            throw new ResponseException(ErrorType.Validation, "Limit must be greater then zero");
+            throw new ResponseException(ErrorType.Validation, "Limit must be greater than zero");
         }
 
         var newLimit = new CategoryLimitEntity
@@ -93,6 +116,7 @@ public class CategoryLimitRepository : ICategoryLimitRepository
             Id = Guid.NewGuid(),
             Category = category,
             Limit = dto.Limit,
+            UserId = userId,
         };
 
         _db.Set<CategoryLimitEntity>().Add(newLimit);
@@ -107,6 +131,7 @@ public class CategoryLimitRepository : ICategoryLimitRepository
     }
 
     public async Task<BaseLimitDto> UpdateCategoryLimitAsync(
+        Guid userId,
         Guid limitId,
         BaseLimitDto dto,
         CancellationToken ct
@@ -118,31 +143,29 @@ public class CategoryLimitRepository : ICategoryLimitRepository
         }
 
         var existingLimit = await _db.Set<CategoryLimitEntity>()
-            .FirstOrDefaultAsync(cl => cl.Id == limitId, ct);
+            .FirstOrDefaultAsync(cl => cl.Id == limitId && cl.UserId == userId, ct);
 
         if (existingLimit == null)
         {
-            throw new ResponseException(ErrorType.Conflict, "Category don`t have a limit");
+            throw new ResponseException(ErrorType.NotFound, "Category doesn't have a limit");
         }
 
         existingLimit.Limit = dto.Limit;
 
         await _db.SaveChangesAsync(ct);
 
-        var updatedLimit = new BaseLimitDto
+        return new BaseLimitDto
         {
             Id = existingLimit.Id,
             CategoryId = existingLimit.Category.Id,
             Limit = existingLimit.Limit,
         };
-
-        return updatedLimit;
     }
 
-    public async Task DeleteCategoryLimitAsync(Guid limitId, CancellationToken ct)
+    public async Task DeleteCategoryLimitAsync(Guid userId, Guid limitId, CancellationToken ct)
     {
         var categoryLimit = await _db.Set<CategoryLimitEntity>()
-            .FirstOrDefaultAsync(cl => cl.Id == limitId);
+            .FirstOrDefaultAsync(cl => cl.Id == limitId && cl.UserId == userId, ct);
 
         if (categoryLimit == null)
         {

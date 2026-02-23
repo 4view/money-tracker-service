@@ -2,10 +2,10 @@ namespace MoneyTracker.Api.Controllers;
 
 [ApiController]
 [Route("api/[controller]")]
+[Authorize]
 public class CategoryController : Controller
 {
     private readonly ICategoryRepository _repository;
-
     private readonly IErrorResponse _errorResponse;
 
     public CategoryController(ICategoryRepository repository, IErrorResponse errorResponse)
@@ -14,12 +14,23 @@ public class CategoryController : Controller
         _errorResponse = errorResponse;
     }
 
+    private Guid GetCurrentUserId()
+    {
+        var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier);
+        if (userIdClaim == null || !Guid.TryParse(userIdClaim.Value, out var userId))
+        {
+            throw new UnauthorizedAccessException("Пользователь не авторизован");
+        }
+        return userId;
+    }
+
     [HttpGet]
     public async Task<IActionResult> GetAllCategories(CancellationToken ct)
     {
         try
         {
-            var categories = await _repository.GetAllCategoryAsync(ct);
+            var userId = GetCurrentUserId();
+            var categories = await _repository.GetAllCategoryAsync(userId, ct);
 
             return Ok(categories);
         }
@@ -31,11 +42,12 @@ public class CategoryController : Controller
     }
 
     [HttpGet("{id}")]
-    public IActionResult GetCategoryByName(Guid id)
+    public async Task<IActionResult> GetCategoryById(Guid id, CancellationToken ct)
     {
         try
         {
-            var category = _repository.GetCategoryByName(id);
+            var userId = GetCurrentUserId();
+            var category = await _repository.GetCategoryByIdAsync(userId, id, ct);
 
             return Ok(category);
         }
@@ -43,7 +55,7 @@ public class CategoryController : Controller
         {
             var error = _errorResponse.CreateErrorResponse(ex);
             return error;
-        }       
+        }
     }
 
     [HttpPost]
@@ -51,10 +63,11 @@ public class CategoryController : Controller
     {
         try
         {
-            var category = await _repository.AddCategoryAsync(dto, ct);
+            var userId = GetCurrentUserId();
+            var category = await _repository.AddCategoryAsync(userId, dto, ct);
 
             return CreatedAtAction(
-                nameof(GetCategoryByName),
+                nameof(GetCategoryById),
                 new { id = category.Id },
                 new { category.Id, category.Name }
             );
@@ -63,15 +76,20 @@ public class CategoryController : Controller
         {
             var error = _errorResponse.CreateErrorResponse(ex);
             return error;
-        }          
+        }
     }
 
     [HttpPut("{id}")]
-    public async Task<IActionResult> UpdateCategory(Guid id, CategoryDto dto, CancellationToken ct)
+    public async Task<IActionResult> UpdateCategory(
+        Guid id,
+        [FromBody] CategoryDto dto,
+        CancellationToken ct
+    )
     {
         try
         {
-            var updCategory = await _repository.UpdateCategoryAsync(id, dto, ct);
+            var userId = GetCurrentUserId();
+            var updCategory = await _repository.UpdateCategoryAsync(userId, id, dto, ct);
 
             return NoContent();
         }
@@ -82,13 +100,13 @@ public class CategoryController : Controller
         }
     }
 
-
     [HttpDelete("{id}")]
     public async Task<IActionResult> DeleteCategory(Guid id, CancellationToken ct)
     {
         try
         {
-            await _repository.DeleteCategoryAsync(id, ct);
+            var userId = GetCurrentUserId();
+            await _repository.DeleteCategoryAsync(userId, id, ct);
 
             return NoContent();
         }

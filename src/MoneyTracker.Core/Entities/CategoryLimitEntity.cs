@@ -7,6 +7,10 @@ public class CategoryLimitEntity
     /// </summary>
     public Guid Id { get; set; }
 
+    public Guid UserId { get; set; }
+
+    public UserEntity User { get; set; } = null!;
+
     /// <summary>
     /// Связанная с лимитом категория
     /// </summary>

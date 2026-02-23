@@ -3,43 +3,74 @@ namespace MoneyTracker.Data.Repositories;
 public class CategoryRepository : ICategoryRepository
 {
     private readonly ApplicationDbContext _db;
+    private readonly IHttpContextAccessor _httpContextAccessor;
 
-    public CategoryRepository(ApplicationDbContext context)
+    public CategoryRepository(
+        ApplicationDbContext context,
+        IHttpContextAccessor httpContextAccessor
+    )
     {
         _db = context;
+        _httpContextAccessor = httpContextAccessor;
     }
 
-    public async Task<List<CategoryDto>> GetAllCategoryAsync(CancellationToken ct)
+    private Guid GetCurrentUserId()
+    {
+        var userIdClaim = _httpContextAccessor.HttpContext?.User?.FindFirst(
+            ClaimTypes.NameIdentifier
+        );
+        if (userIdClaim == null)
+            throw new ResponseException(ErrorType.Validation, "Пользователь не авторизован");
+
+        return Guid.Parse(userIdClaim.Value);
+    }
+
+    public async Task<List<CategoryDto>> GetAllCategoryAsync(Guid userId, CancellationToken ct)
     {
         var categoryList = await _db.Set<CategoryEntity>()
+            .Where(c => c.UserId == userId)
             .Select(c => new CategoryDto { Id = c.Id, Name = c.Name })
             .ToListAsync(ct);
 
         return categoryList;
     }
 
-    public CategoryEntity GetCategoryByName(Guid id)
+    public async Task<CategoryEntity> GetCategoryByIdAsync(
+        Guid userId,
+        Guid id,
+        CancellationToken ct
+    )
     {
-        var category = _db.Set<CategoryEntity>().FirstOrDefault(c => c.Id == id);
+        var category = await _db.Set<CategoryEntity>()
+            .FirstOrDefaultAsync(c => c.Id == id && c.UserId == userId, ct);
 
         if (category == null)
         {
-            throw new ResponseException(ErrorType.NotFound, $"Category not found");
+            throw new ResponseException(ErrorType.NotFound, $"Категория не найдена");
         }
 
         return category;
     }
 
-    public async Task<CategoryEntity> AddCategoryAsync(CategoryDto category, CancellationToken ct)
+    public async Task<CategoryEntity> AddCategoryAsync(
+        Guid userId,
+        CategoryDto category,
+        CancellationToken ct
+    )
     {
         if (category.Name == null || string.IsNullOrWhiteSpace(category.Name))
         {
-            throw new ResponseException(ErrorType.Validation, $"Category name must be specefied");
+            throw new ResponseException(ErrorType.Validation, $"Category name must be specified");
         }
 
         if (
             await _db.Set<CategoryEntity>()
-                .AnyAsync(c => c.Name.Trim().ToLower() == category.Name.Trim().ToLower(), ct)
+                .AnyAsync(
+                    c =>
+                        c.UserId == userId
+                        && c.Name.Trim().ToLower() == category.Name.Trim().ToLower(),
+                    ct
+                )
         )
         {
             throw new ResponseException(
@@ -48,7 +79,12 @@ public class CategoryRepository : ICategoryRepository
             );
         }
 
-        var newCategory = new CategoryEntity { Name = category.Name };
+        var newCategory = new CategoryEntity
+        {
+            Id = Guid.NewGuid(),
+            Name = category.Name,
+            UserId = userId,
+        };
 
         await _db.Set<CategoryEntity>().AddAsync(newCategory, ct);
         await _db.SaveChangesAsync(ct);
@@ -57,12 +93,14 @@ public class CategoryRepository : ICategoryRepository
     }
 
     public async Task<CategoryEntity> UpdateCategoryAsync(
+        Guid userId,
         Guid id,
         CategoryDto dto,
         CancellationToken ct
     )
     {
-        var category = await _db.Set<CategoryEntity>().FirstOrDefaultAsync(c => c.Id == id, ct);
+        var category = await _db.Set<CategoryEntity>()
+            .FirstOrDefaultAsync(c => c.Id == id && c.UserId == userId, ct);
 
         if (category == null)
         {
@@ -71,7 +109,13 @@ public class CategoryRepository : ICategoryRepository
 
         if (
             await _db.Set<CategoryEntity>()
-                .AnyAsync(c => c.Name.Trim().ToLower() == dto.Name.Trim().ToLower(), ct)
+                .AnyAsync(
+                    c =>
+                        c.UserId == userId
+                        && c.Id != id
+                        && c.Name.Trim().ToLower() == dto.Name.Trim().ToLower(),
+                    ct
+                )
         )
         {
             throw new ResponseException(ErrorType.Conflict, $"Category '{dto.Name}' already exist");
@@ -84,9 +128,10 @@ public class CategoryRepository : ICategoryRepository
         return category;
     }
 
-    public async Task DeleteCategoryAsync(Guid id, CancellationToken ct)
+    public async Task DeleteCategoryAsync(Guid userId, Guid id, CancellationToken ct)
     {
-        var category = await _db.Set<CategoryEntity>().FirstOrDefaultAsync(c => c.Id == id, ct);
+        var category = await _db.Set<CategoryEntity>()
+            .FirstOrDefaultAsync(c => c.Id == id && c.UserId == userId, ct);
 
         if (category == null)
         {
@@ -94,12 +139,12 @@ public class CategoryRepository : ICategoryRepository
         }
 
         bool hasRelatedExpenses = await _db.Set<ExpenseEntity>()
-            .AnyAsync(e => e.CategoryId == category.Id, ct);
+            .AnyAsync(e => e.CategoryId == category.Id && e.UserId == userId, ct);
 
         if (hasRelatedExpenses)
         {
             int expenseCount = await _db.Set<ExpenseEntity>()
-                .CountAsync(e => e.CategoryId == category.Id, ct);
+                .CountAsync(e => e.CategoryId == category.Id && e.UserId == userId, ct);
 
             throw new ResponseException(
                 ErrorType.Validation,

@@ -6,12 +6,16 @@ namespace MoneyTracker.Core.Entities;
 public class CategoryEntity
 {
     /// <summary>
-    /// Id категории 
+    /// Id категории
     /// </summary>
     public Guid Id { get; init; }
 
+    public Guid UserId { get; set; }
+
+    public UserEntity User { get; set; } = null!;
+
     /// <summary>
-    /// Название категории 
+    /// Название категории
     /// </summary>
     public string Name { get; set; } = string.Empty;
 }

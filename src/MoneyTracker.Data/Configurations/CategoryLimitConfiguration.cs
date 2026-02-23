@@ -6,5 +6,11 @@ public class CategoryLimitConfiguration : IEntityTypeConfiguration<CategoryLimit
     {
         builder.HasKey(cl => cl.Id);
         builder.Property(cl => cl.Limit).IsRequired();
+
+        builder
+            .HasOne(cl => cl.User)
+            .WithMany()
+            .HasForeignKey(cl => cl.UserId)
+            .OnDelete(DeleteBehavior.Cascade);
     }
 }

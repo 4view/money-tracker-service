@@ -1,0 +1,1044 @@
+/* Базовые сбросы */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    -webkit-tap-highlight-color: transparent;
+}
+
+body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
+    background: #f5f7fa;
+    min-height: 100vh;
+    padding: 12px;
+}
+
+.container {
+    max-width: 100%;
+    margin: 0 auto;
+}
+
+/* Шапка */
+.header {
+    background: white;
+    padding: 16px;
+    border-radius: 12px;
+    margin-bottom: 12px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+}
+
+.header-content {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    width: 100%;
+    margin-bottom: 8px;
+}
+
+.nav-links {
+    display: flex;
+    gap: 16px;
+}
+
+.nav-link {
+    color: #2196F3;
+    text-decoration: none;
+    font-weight: 500;
+    font-size: 16px;
+}
+
+.nav-link:active {
+    opacity: 0.7;
+}
+
+.user-info {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.user-name {
+    font-weight: 500;
+    color: #333;
+    font-size: 14px;
+}
+
+.logout-btn {
+    background: none;
+    border: 1px solid #dc3545;
+    color: #dc3545;
+    padding: 6px 12px;
+    border-radius: 6px;
+    font-size: 13px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.logout-btn:active {
+    background: #dc3545;
+    color: white;
+}
+
+.header-subtitle {
+    color: #666;
+    font-size: 14px;
+}
+
+/* Навигация для внутренних страниц */
+.nav-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    width: 100%;
+}
+
+.back-btn {
+    color: #2196F3;
+    text-decoration: none;
+    font-size: 14px;
+    font-weight: 500;
+    padding: 8px 12px;
+    border-radius: 6px;
+    background: #f0f0f0;
+}
+
+.back-btn:active {
+    background: #e0e0e0;
+}
+
+/* Информация о камере */
+.camera-info {
+    background: white;
+    padding: 10px;
+    border-radius: 8px;
+    margin-bottom: 12px;
+    text-align: center;
+    font-size: 14px;
+    color: #28a745;
+    font-weight: 500;
+    box-shadow: 0 1px 4px rgba(0, 0, 0, 0.05);
+}
+
+/* Кнопки */
+.scan-btn {
+    background: #2196F3;
+    color: white;
+    border: none;
+    padding: 16px;
+    border-radius: 10px;
+    font-size: 18px;
+    font-weight: 600;
+    cursor: pointer;
+    width: 100%;
+    margin-bottom: 16px;
+    transition: all 0.2s;
+    box-shadow: 0 2px 8px rgba(33, 150, 243, 0.3);
+}
+
+.scan-btn:active {
+    background: #1976D2;
+    transform: translateY(1px);
+}
+
+.primary-btn {
+    background: #2196F3;
+    color: white;
+    border: none;
+    padding: 14px;
+    border-radius: 8px;
+    font-size: 16px;
+    font-weight: 500;
+    cursor: pointer;
+    width: 100%;
+    transition: all 0.2s;
+}
+
+.primary-btn:active {
+    background: #1976D2;
+}
+
+.secondary-btn {
+    background: #6c757d;
+    color: white;
+    border: none;
+    padding: 14px;
+    border-radius: 8px;
+    font-size: 16px;
+    font-weight: 500;
+    cursor: pointer;
+    width: 100%;
+    transition: all 0.2s;
+}
+
+.secondary-btn:active {
+    background: #5a6268;
+}
+
+/* Сканер */
+.scanner-wrapper {
+    background: white;
+    border-radius: 12px;
+    padding: 16px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    margin-bottom: 16px;
+    animation: slideDown 0.3s ease;
+}
+
+@keyframes slideDown {
+    from {
+        transform: translateY(-20px);
+        opacity: 0;
+    }
+
+    to {
+        transform: translateY(0);
+        opacity: 1;
+    }
+}
+
+.scanner-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 12px;
+    padding-bottom: 8px;
+    border-bottom: 1px solid #e0e0e0;
+}
+
+.scanner-title {
+    font-weight: 500;
+    color: #333;
+    font-size: 16px;
+}
+
+.close-scanner {
+    background: none;
+    border: none;
+    font-size: 24px;
+    cursor: pointer;
+    color: #666;
+    min-width: 44px;
+    min-height: 44px;
+}
+
+.close-scanner:active {
+    color: #333;
+}
+
+#qr-reader {
+    width: 100%;
+    min-height: 280px;
+    border: 2px dashed #2196F3;
+    border-radius: 8px;
+    overflow: hidden;
+    background: #f8f9fa;
+}
+
+#qr-reader video {
+    width: 100%;
+    height: auto;
+}
+
+.stop-scan-btn {
+    margin-top: 12px;
+}
+
+/* Результат сканирования */
+.result-container {
+    background: white;
+    border-radius: 12px;
+    padding: 16px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    margin-bottom: 16px;
+    animation: slideIn 0.3s ease;
+}
+
+@keyframes slideIn {
+    from {
+        transform: translateY(20px);
+        opacity: 0;
+    }
+
+    to {
+        transform: translateY(0);
+        opacity: 1;
+    }
+}
+
+.result-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 16px;
+    padding-bottom: 12px;
+    border-bottom: 1px solid #e0e0e0;
+}
+
+.result-header h2 {
+    color: #333;
+    font-size: 18px;
+    font-weight: 600;
+}
+
+.status {
+    padding: 4px 8px;
+    border-radius: 4px;
+    font-size: 12px;
+    font-weight: 500;
+}
+
+.status.warning {
+    background: #fff3cd;
+    color: #856404;
+}
+
+/* Детали расхода */
+.expense-details {
+    background: #f8f9fa;
+    border-radius: 8px;
+    padding: 12px;
+    margin-bottom: 16px;
+}
+
+.detail-row {
+    display: flex;
+    align-items: center;
+    padding: 8px 0;
+    border-bottom: 1px solid #e0e0e0;
+}
+
+.detail-row:last-child {
+    border-bottom: none;
+}
+
+.detail-label {
+    flex: 0 0 80px;
+    color: #666;
+    font-weight: 500;
+    font-size: 14px;
+}
+
+.detail-value {
+    flex: 1;
+    color: #333;
+    font-weight: 500;
+    font-size: 15px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.edit-btn {
+    background: none;
+    border: none;
+    color: #2196F3;
+    font-size: 14px;
+    font-weight: 500;
+    cursor: pointer;
+    padding: 4px 8px;
+}
+
+.edit-btn:active {
+    opacity: 0.7;
+}
+
+.action-buttons {
+    display: flex;
+    gap: 10px;
+    margin-top: 12px;
+}
+
+.action-buttons button {
+    flex: 1;
+}
+
+/* Последние сканирования */
+.last-scans {
+    background: white;
+    border-radius: 12px;
+    padding: 16px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.last-scans h3 {
+    color: #333;
+    font-size: 16px;
+    font-weight: 600;
+    margin-bottom: 16px;
+}
+
+/* Общий стиль для элементов трат (и на главной, и на странице всех трат) */
+.expense-item {
+    background: #f8f9fa;
+    border-radius: 10px;
+    padding: 16px;
+    margin-bottom: 12px;
+    border-left: 3px solid #2196F3;
+}
+
+.expense-item:last-child {
+    margin-bottom: 0;
+}
+
+.expense-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 8px;
+}
+
+.expense-date {
+    font-size: 14px;
+    color: #666;
+}
+
+.expense-sum {
+    font-size: 18px;
+    font-weight: 600;
+    color: #28a745;
+}
+
+.expense-category {
+    display: inline-block;
+    background: #e3f2fd;
+    color: #1976D2;
+    padding: 4px 12px;
+    border-radius: 4px;
+    font-size: 12px;
+    font-weight: 500;
+    margin-bottom: 8px;
+}
+
+.expense-description {
+    font-size: 15px;
+    color: #333;
+    margin-bottom: 12px;
+    word-break: break-word;
+}
+
+.expense-actions {
+    display: flex;
+    gap: 8px;
+    justify-content: flex-end;
+}
+
+.action-link {
+    background: none;
+    border: none;
+    color: #2196F3;
+    font-size: 14px;
+    font-weight: 500;
+    cursor: pointer;
+    padding: 6px 12px;
+    border-radius: 4px;
+}
+
+.action-link.delete {
+    color: #dc3545;
+}
+
+.action-link:active {
+    background: rgba(0, 0, 0, 0.05);
+}
+
+/* Даты в списке последних сканирований */
+.dates-container {
+    margin-bottom: 10px;
+    padding-bottom: 8px;
+    border-bottom: 1px solid #e0e0e0;
+}
+
+.purchase-date {
+    font-size: 15px;
+    font-weight: 600;
+    color: #333;
+    margin-bottom: 2px;
+}
+
+.purchase-date .date-label {
+    font-weight: 400;
+    color: #666;
+    font-size: 12px;
+    margin-right: 4px;
+}
+
+.added-date {
+    font-size: 13px;
+    color: #999;
+}
+
+.added-date .date-label {
+    font-weight: 400;
+    color: #999;
+    font-size: 12px;
+    margin-right: 4px;
+}
+
+/* Описание со сворачиванием */
+.scan-description {
+    width: 100%;
+}
+
+.description-text {
+    max-width: 100%;
+    word-break: break-word;
+    line-height: 1.4;
+    font-size: 15px;
+    color: #333;
+}
+
+.description-text.collapsed {
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+}
+
+.toggle-description {
+    background: none;
+    border: none;
+    color: #2196F3;
+    font-size: 13px;
+    font-weight: 500;
+    padding: 4px 0;
+    margin-top: 2px;
+    cursor: pointer;
+    text-align: left;
+}
+
+/* Сумма */
+.amount {
+    font-weight: 600;
+    color: #28a745;
+    font-size: 18px;
+    margin-top: 8px;
+    text-align: right;
+    border-top: 1px dashed #e0e0e0;
+    padding-top: 8px;
+}
+
+/* Модальные окна - улучшенные для мобильных */
+.modal {
+    display: none;
+    position: fixed;
+    z-index: 1000;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.6);
+    backdrop-filter: blur(5px);
+    align-items: flex-end;
+    justify-content: center;
+}
+
+@media (min-width: 600px) {
+    .modal {
+        align-items: center;
+    }
+}
+
+.modal-content {
+    background-color: white;
+    width: 100%;
+    max-width: 500px;
+    border-radius: 24px 24px 0 0;
+    padding: 28px 20px 24px;
+    box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.15);
+    animation: modalSlideUp 0.3s ease;
+}
+
+@keyframes modalSlideUp {
+    from {
+        transform: translateY(100%);
+        opacity: 0.5;
+    }
+
+    to {
+        transform: translateY(0);
+        opacity: 1;
+    }
+}
+
+@media (min-width: 600px) {
+    .modal-content {
+        border-radius: 24px;
+        animation: modalFadeIn 0.3s ease;
+        padding: 32px;
+    }
+
+    @keyframes modalFadeIn {
+        from {
+            transform: scale(0.9);
+            opacity: 0;
+        }
+
+        to {
+            transform: scale(1);
+            opacity: 1;
+        }
+    }
+}
+
+.modal-content h3 {
+    color: #333;
+    font-size: 22px;
+    font-weight: 600;
+    margin-bottom: 24px;
+    text-align: left;
+    padding-right: 20px;
+}
+
+/* УЛУЧШЕННЫЕ ПОЛЯ ВВОДА */
+.modal-input,
+.modal-select {
+    width: 100%;
+    padding: 18px 16px;
+    margin-bottom: 20px;
+    border: 2px solid #e0e0e0;
+    border-radius: 16px;
+    font-size: 18px;
+    line-height: 1.5;
+    transition: all 0.2s;
+    -webkit-appearance: none;
+    appearance: none;
+    background: #f8f9fa;
+}
+
+.modal-input:focus,
+.modal-select:focus {
+    outline: none;
+    border-color: #2196F3;
+    background: white;
+    box-shadow: 0 0 0 4px rgba(33, 150, 243, 0.1);
+}
+
+.modal-input::placeholder {
+    color: #999;
+    font-size: 17px;
+}
+
+/* УЛУЧШЕННЫЙ SELECT */
+.modal-select {
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='20' height='20' viewBox='0 0 24 24' fill='none' stroke='%23666' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 16px center;
+    background-size: 20px;
+    padding-right: 52px;
+    cursor: pointer;
+    font-size: 18px;
+}
+
+/* УЛУЧШЕННЫЕ КНОПКИ */
+.modal-buttons {
+    display: flex;
+    gap: 12px;
+    margin-top: 28px;
+}
+
+.modal-btn {
+    flex: 1;
+    padding: 18px 16px;
+    border: none;
+    border-radius: 16px;
+    font-size: 18px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+    text-align: center;
+    min-height: 60px;
+    letter-spacing: 0.3px;
+}
+
+.modal-btn.save {
+    background: #2196F3;
+    color: white;
+    box-shadow: 0 4px 12px rgba(33, 150, 243, 0.3);
+}
+
+.modal-btn.delete {
+    background: #dc3545;
+    color: white;
+    box-shadow: 0 4px 12px rgba(220, 53, 69, 0.3);
+}
+
+.modal-btn.cancel {
+    background: #6c757d;
+    color: white;
+    box-shadow: 0 4px 12px rgba(108, 117, 125, 0.3);
+}
+
+.modal-btn:active {
+    transform: scale(0.97);
+    opacity: 0.9;
+}
+
+/* Убираем эффекты наведения на мобильных */
+@media (hover: none) {
+    .modal-btn:hover {
+        transform: none;
+    }
+}
+
+/* Для очень маленьких экранов */
+@media (max-width: 360px) {
+    .modal-content {
+        padding: 20px 16px 20px;
+    }
+
+    .modal-content h3 {
+        font-size: 20px;
+        margin-bottom: 20px;
+    }
+
+    .modal-btn {
+        padding: 16px 12px;
+        font-size: 17px;
+        min-height: 56px;
+    }
+
+    .modal-input,
+    .modal-select {
+        padding: 16px 14px;
+        font-size: 17px;
+    }
+
+    .modal-input::placeholder {
+        font-size: 16px;
+    }
+}
+
+/* Модальное окно подтверждения */
+.delete-modal {
+    text-align: center;
+}
+
+.delete-modal p {
+    margin: 20px 0 28px;
+    color: #666;
+    font-size: 18px;
+    line-height: 1.5;
+}
+
+.warning-text {
+    color: #dc3545;
+    font-size: 15px;
+    margin-bottom: 20px;
+    font-weight: 500;
+}
+
+/* Анимация для ошибок */
+@keyframes shake {
+
+    0%,
+    100% {
+        transform: translateX(0);
+    }
+
+    25% {
+        transform: translateX(-5px);
+    }
+
+    75% {
+        transform: translateX(5px);
+    }
+}
+
+.error-shake {
+    animation: shake 0.4s ease;
+}
+
+/* Вспомогательные классы */
+.hidden {
+    display: none !important;
+}
+
+.loading-spinner {
+    text-align: center;
+    padding: 40px;
+    color: #999;
+    font-size: 14px;
+}
+
+.empty-state {
+    text-align: center;
+    padding: 40px 20px;
+    color: #999;
+    font-size: 14px;
+}
+
+/* Адаптация для маленьких экранов */
+@media (max-width: 480px) {
+    .nav-links {
+        gap: 12px;
+    }
+
+    .nav-link {
+        font-size: 14px;
+    }
+
+    .user-name {
+        font-size: 13px;
+    }
+
+    .logout-btn {
+        padding: 4px 8px;
+        font-size: 12px;
+    }
+}
+
+/* Адаптация для больших экранов (планшеты и десктопы) */
+@media (min-width: 768px) {
+    body {
+        display: flex;
+        align-items: flex-start;
+        justify-content: center;
+        padding: 30px 20px;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    }
+
+    .container {
+        max-width: 800px;
+        width: 100%;
+        margin: 0 auto;
+    }
+
+    /* Шапка */
+    .header {
+        padding: 24px;
+        border-radius: 16px;
+        margin-bottom: 20px;
+    }
+
+    .header-content {
+        margin-bottom: 12px;
+    }
+
+    .nav-links {
+        gap: 24px;
+    }
+
+    .nav-link {
+        font-size: 18px;
+    }
+
+    .user-name {
+        font-size: 16px;
+    }
+
+    .logout-btn {
+        padding: 8px 16px;
+        font-size: 14px;
+    }
+
+    .header-subtitle {
+        font-size: 16px;
+    }
+
+    /* Информация о камере */
+    .camera-info {
+        padding: 12px;
+        font-size: 16px;
+        margin-bottom: 20px;
+    }
+
+    /* Кнопка сканирования */
+    .scan-btn {
+        padding: 20px;
+        font-size: 20px;
+        margin-bottom: 24px;
+        max-width: 400px;
+        margin-left: auto;
+        margin-right: auto;
+        display: block;
+    }
+
+    /* Сканер */
+    .scanner-wrapper {
+        padding: 24px;
+        margin-bottom: 24px;
+    }
+
+    #qr-reader {
+        min-height: 350px;
+    }
+
+    /* Результат сканирования */
+    .result-container {
+        padding: 24px;
+        margin-bottom: 24px;
+    }
+
+    .result-header h2 {
+        font-size: 20px;
+    }
+
+    /* Детали расхода */
+    .expense-details {
+        padding: 16px;
+    }
+
+    .detail-label {
+        flex: 0 0 100px;
+        font-size: 15px;
+    }
+
+    .detail-value {
+        font-size: 16px;
+    }
+
+    .edit-btn {
+        font-size: 15px;
+        padding: 6px 12px;
+    }
+
+    .action-buttons {
+        max-width: 500px;
+        margin-left: auto;
+        margin-right: auto;
+    }
+
+    /* Последние сканирования */
+    .last-scans {
+        padding: 24px;
+    }
+
+    .last-scans h3 {
+        font-size: 18px;
+        margin-bottom: 20px;
+    }
+
+    /* Элементы трат */
+    .expense-item {
+        padding: 20px;
+        margin-bottom: 16px;
+    }
+
+    .expense-date {
+        font-size: 15px;
+    }
+
+    .expense-sum {
+        font-size: 20px;
+    }
+
+    .expense-category {
+        font-size: 13px;
+        padding: 4px 14px;
+    }
+
+    .expense-description {
+        font-size: 16px;
+    }
+
+    .action-link {
+        font-size: 15px;
+        padding: 8px 16px;
+    }
+
+    /* Даты */
+    .purchase-date {
+        font-size: 16px;
+    }
+
+    .purchase-date .date-label {
+        font-size: 13px;
+    }
+
+    .added-date {
+        font-size: 14px;
+    }
+
+    .added-date .date-label {
+        font-size: 13px;
+    }
+
+    /* Описание со сворачиванием */
+    .description-text {
+        font-size: 16px;
+    }
+
+    .toggle-description {
+        font-size: 14px;
+        padding: 6px 0;
+    }
+
+    .amount {
+        font-size: 20px;
+        margin-top: 12px;
+        padding-top: 12px;
+    }
+
+    /* Модальные окна */
+    .modal-content {
+        max-width: 500px;
+        border-radius: 24px;
+        padding: 32px;
+    }
+
+    .modal-content h3 {
+        font-size: 24px;
+        margin-bottom: 28px;
+    }
+
+    .modal-input,
+    .modal-select {
+        padding: 20px 18px;
+        font-size: 18px;
+        border-radius: 16px;
+    }
+
+    .modal-btn {
+        padding: 20px 18px;
+        font-size: 18px;
+        min-height: 64px;
+    }
+}
+
+/* Для очень больших экранов (десктопы) */
+@media (min-width: 1200px) {
+    body {
+        padding: 40px;
+    }
+
+    .container {
+        max-width: 1000px;
+    }
+
+    .scan-btn {
+        max-width: 500px;
+    }
+
+    .action-buttons {
+        max-width: 600px;
+    }
+
+    /* Можно сделать две колонки для последних сканирований */
+    .last-scans .expense-item {
+        display: inline-block;
+        width: calc(50% - 8px);
+        margin-right: 8px;
+        vertical-align: top;
+    }
+
+    .last-scans .expense-item:nth-child(even) {
+        margin-right: 0;
+    }
+}
+
+/* Для очень маленьких экранов (телефоны) */
+@media (max-width: 480px) {
+    .scan-btn {
+        font-size: 16px;
+        padding: 14px;
+    }
+
+    .expense-sum {
+        font-size: 16px;
+    }
+
+    .amount {
+        font-size: 16px;
+    }
+}

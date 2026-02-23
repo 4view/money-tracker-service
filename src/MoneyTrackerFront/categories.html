@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="ru">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Категории - MoneyTracker</title>
+
+    <!-- Подключение CSS -->
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="css/categories.css">
+</head>
+
+<body>
+    <div class="container">
+        <!-- Шапка с навигацией -->
+        <div class="header">
+            <div class="nav-header">
+                <a href="index.html" class="back-btn">Назад</a>
+                <h1>Категории</h1>
+                <div class="user-info" id="user-info">
+                    <span class="user-name" id="user-name"></span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Форма добавления категории -->
+        <div class="add-category-container">
+            <h3>Новая категория</h3>
+            <div class="add-category-form">
+                <input type="text" id="new-category-name" placeholder="Например: Продукты" class="category-input">
+                <button class="add-btn" id="add-category">Добавить</button>
+            </div>
+        </div>
+
+        <!-- Список категорий -->
+        <div class="categories-container">
+            <h3>Мои категории</h3>
+            <div id="categories-list" class="categories-list">
+                <div class="loading-spinner">Загрузка...</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Модальное окно для редактирования категории -->
+    <div id="edit-category-modal" class="modal">
+        <div class="modal-content">
+            <h3>Редактирование категории</h3>
+            <input type="hidden" id="edit-category-id">
+            <input type="text" id="edit-category-name" class="modal-input" placeholder="Название категории">
+            <div class="modal-buttons">
+                <button class="modal-btn save" id="save-category-edit">Сохранить</button>
+                <button class="modal-btn cancel" id="cancel-category-edit">Отмена</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Модальное окно подтверждения удаления -->
+    <div id="delete-category-modal" class="modal">
+        <div class="modal-content delete-modal">
+            <h3>Подтверждение удаления</h3>
+            <p id="delete-category-message">Вы уверены, что хотите удалить категорию?</p>
+            <p class="warning-text">Все траты в этой категории также будут удалены!</p>
+            <div class="modal-buttons">
+                <button class="modal-btn delete" id="confirm-category-delete">Удалить</button>
+                <button class="modal-btn cancel" id="cancel-category-delete">Отмена</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="js/auth-check.js"></script>
+    <script src="js/categories.js"></script>
+</body>
+
+</html>

@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="ru">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Сканер QR-кодов чеков</title>
+
+    <!-- Библиотека для сканирования QR-кодов -->
+    <script src="lib/html5-qrcode.min.js"></script>
+
+    <!-- Подключение CSS -->
+    <link rel="stylesheet" href="css/style.css">
+</head>
+
+<body>
+    <div class="container">
+        <div class="header">
+            <div class="header-content">
+                <div class="nav-links">
+                    <a href="categories.html" class="nav-link">Категории</a>
+                    <a href="expenses.html" class="nav-link">Все траты</a>
+                </div>
+                <div class="user-info" id="user-info">
+                    <span class="user-name" id="user-name"></span>
+                    <button class="logout-btn" id="logout-btn">Выйти</button>
+                </div>
+            </div>
+            <p class="header-subtitle">Отсканируйте QR-код с чека</p>
+        </div>
+
+        <!-- Компактная информация о камере -->
+        <div class="camera-info" id="camera-info">
+            <span id="camera-status-text">✅ Камера доступна</span>
+        </div>
+
+        <!-- Кнопка запуска сканера -->
+        <button class="scan-btn" id="start-scan">
+            Начать сканирование
+        </button>
+
+        <!-- Контейнер сканера (изначально скрыт) -->
+        <div class="scanner-wrapper hidden" id="scanner-wrapper">
+            <div class="scanner-header">
+                <span class="scanner-title">Наведите на QR-код</span>
+                <button class="close-scanner" id="close-scanner">✕</button>
+            </div>
+            <div id="qr-reader"></div>
+            <div id="camera-status" class="scanner-status"></div>
+            <button class="secondary-btn stop-scan-btn" id="stop-scan">Остановить сканирование</button>
+        </div>
+
+        <!-- Результат сканирования -->
+        <div class="result-container hidden" id="result-container">
+            <div class="result-header">
+                <h2>Результат сканирования</h2>
+                <span class="status" id="scan-status">Ожидание</span>
+            </div>
+
+            <div class="expense-details" id="expense-details">
+                <!-- Данные будут заполняться динамически -->
+            </div>
+
+            <div class="action-buttons">
+                <button class="primary-btn" id="save-expense">Сохранить расход</button>
+                <button class="secondary-btn" id="scan-new">Новый скан</button>
+            </div>
+        </div>
+
+        <!-- Последние сканирования -->
+        <div class="last-scans">
+            <h3>Последние сканирования</h3>
+            <div id="scans-list">
+                <!-- Список последних сканирований -->
+            </div>
+        </div>
+    </div>
+
+    <!-- Модальное окно для редактирования -->
+    <div id="edit-modal" class="modal">
+        <div class="modal-content">
+            <h3 id="modal-title">Редактирование</h3>
+            <input type="hidden" id="edit-field">
+            <input type="text" id="edit-input" class="modal-input" placeholder="Введите описание траты"
+                style="display: none;">
+            <select id="edit-select" class="modal-select" style="display: none;"></select>
+            <input type="datetime-local" id="edit-date" class="modal-input" style="display: none;">
+            <div class="modal-buttons">
+                <button class="modal-btn save" id="save-edits">Сохранить</button>
+                <button class="modal-btn cancel" id="cancel-edit">Отмена</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Подключение JavaScript -->
+    <script src="js/auth-check.js"></script>
+    <script src="js/app.js"></script>
+</body>
+
+</html>
