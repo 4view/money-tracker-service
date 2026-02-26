@@ -3,25 +3,15 @@ namespace MoneyTracker.Api.Controllers;
 [ApiController]
 [Route("api/[controller]")]
 [Authorize]
-public class LimitController : Controller
+public class LimitController : BaseController
 {
-    private readonly ICategoryLimitRepository _repository;
+    private readonly ILimitService _limitService;
     private readonly IErrorResponse _errorResponse;
 
-    public LimitController(ICategoryLimitRepository repository, IErrorResponse errorResponse)
+    public LimitController(ILimitService limitService, IErrorResponse errorResponse)
     {
-        _repository = repository;
+        _limitService = limitService;
         _errorResponse = errorResponse;
-    }
-
-    private Guid GetCurrentUserId()
-    {
-        var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier);
-        if (userIdClaim == null || !Guid.TryParse(userIdClaim.Value, out var userId))
-        {
-            throw new UnauthorizedAccessException("Пользователь не авторизован");
-        }
-        return userId;
     }
 
     [HttpGet]
@@ -30,13 +20,13 @@ public class LimitController : Controller
         try
         {
             var userId = GetCurrentUserId();
-            var limitsList = await _repository.GetAllLimitsAsync(userId, ct);
-            return Ok(limitsList);
+            var limits = await _limitService.GetAllAsync(userId, ct);
+
+            return Ok(limits);
         }
         catch (Exception ex)
         {
-            var error = _errorResponse.CreateErrorResponse(ex);
-            return error;
+            return _errorResponse.CreateErrorResponse(ex);
         }
     }
 
@@ -52,7 +42,7 @@ public class LimitController : Controller
         try
         {
             var userId = GetCurrentUserId();
-            var categoryLimit = await _repository.GetCategoryLimitAsync(
+            var result = await _limitService.GetWithCalculationAsync(
                 userId,
                 limitId,
                 categoryId,
@@ -61,12 +51,11 @@ public class LimitController : Controller
                 ct
             );
 
-            return Ok(categoryLimit);
+            return Ok(result);
         }
         catch (Exception ex)
         {
-            var error = _errorResponse.CreateErrorResponse(ex);
-            return error;
+            return _errorResponse.CreateErrorResponse(ex);
         }
     }
 
@@ -79,18 +68,17 @@ public class LimitController : Controller
         try
         {
             var userId = GetCurrentUserId();
-            var categoryLimit = await _repository.AddCategoryLimitAsync(userId, dto, ct);
+            var created = await _limitService.AddAsync(userId, dto, ct);
 
             return CreatedAtAction(
                 nameof(GetCategoryLimit),
-                new { limitId = categoryLimit.Id, categoryId = categoryLimit.CategoryId },
-                categoryLimit
+                new { limitId = created.Id, categoryId = created.CategoryId },
+                created
             );
         }
         catch (Exception ex)
         {
-            var error = _errorResponse.CreateErrorResponse(ex);
-            return error;
+            return _errorResponse.CreateErrorResponse(ex);
         }
     }
 
@@ -104,13 +92,13 @@ public class LimitController : Controller
         try
         {
             var userId = GetCurrentUserId();
-            var updatedLimit = await _repository.UpdateCategoryLimitAsync(userId, limitId, dto, ct);
+            await _limitService.UpdateAsync(userId, limitId, dto, ct);
+
             return NoContent();
         }
         catch (Exception ex)
         {
-            var error = _errorResponse.CreateErrorResponse(ex);
-            return error;
+            return _errorResponse.CreateErrorResponse(ex);
         }
     }
 
@@ -120,14 +108,13 @@ public class LimitController : Controller
         try
         {
             var userId = GetCurrentUserId();
-            await _repository.DeleteCategoryLimitAsync(userId, limitId, ct);
+            await _limitService.DeleteAsync(userId, limitId, ct);
 
             return NoContent();
         }
         catch (Exception ex)
         {
-            var error = _errorResponse.CreateErrorResponse(ex);
-            return error;
+            return _errorResponse.CreateErrorResponse(ex);
         }
     }
 }

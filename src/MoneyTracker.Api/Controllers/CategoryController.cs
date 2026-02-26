@@ -3,25 +3,15 @@ namespace MoneyTracker.Api.Controllers;
 [ApiController]
 [Route("api/[controller]")]
 [Authorize]
-public class CategoryController : Controller
+public class CategoryController : BaseController
 {
-    private readonly ICategoryRepository _repository;
+    private readonly ICategoryService _categoryService;
     private readonly IErrorResponse _errorResponse;
 
-    public CategoryController(ICategoryRepository repository, IErrorResponse errorResponse)
+    public CategoryController(ICategoryService categoryService, IErrorResponse errorResponse)
     {
-        _repository = repository;
+        _categoryService = categoryService;
         _errorResponse = errorResponse;
-    }
-
-    private Guid GetCurrentUserId()
-    {
-        var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier);
-        if (userIdClaim == null || !Guid.TryParse(userIdClaim.Value, out var userId))
-        {
-            throw new UnauthorizedAccessException("Пользователь не авторизован");
-        }
-        return userId;
     }
 
     [HttpGet]
@@ -30,14 +20,13 @@ public class CategoryController : Controller
         try
         {
             var userId = GetCurrentUserId();
-            var categories = await _repository.GetAllCategoryAsync(userId, ct);
+            var categories = await _categoryService.GetAllAsync(userId, ct);
 
             return Ok(categories);
         }
         catch (Exception ex)
         {
-            var error = _errorResponse.CreateErrorResponse(ex);
-            return error;
+            return _errorResponse.CreateErrorResponse(ex);
         }
     }
 
@@ -47,14 +36,13 @@ public class CategoryController : Controller
         try
         {
             var userId = GetCurrentUserId();
-            var category = await _repository.GetCategoryByIdAsync(userId, id, ct);
+            var category = await _categoryService.GetByIdAsync(userId, id, ct);
 
             return Ok(category);
         }
         catch (Exception ex)
         {
-            var error = _errorResponse.CreateErrorResponse(ex);
-            return error;
+            return _errorResponse.CreateErrorResponse(ex);
         }
     }
 
@@ -64,18 +52,13 @@ public class CategoryController : Controller
         try
         {
             var userId = GetCurrentUserId();
-            var category = await _repository.AddCategoryAsync(userId, dto, ct);
+            var created = await _categoryService.AddAsync(userId, dto, ct);
 
-            return CreatedAtAction(
-                nameof(GetCategoryById),
-                new { id = category.Id },
-                new { category.Id, category.Name }
-            );
+            return CreatedAtAction(nameof(GetCategoryById), new { id = created.Id }, created);
         }
         catch (Exception ex)
         {
-            var error = _errorResponse.CreateErrorResponse(ex);
-            return error;
+            return _errorResponse.CreateErrorResponse(ex);
         }
     }
 
@@ -89,14 +72,13 @@ public class CategoryController : Controller
         try
         {
             var userId = GetCurrentUserId();
-            var updCategory = await _repository.UpdateCategoryAsync(userId, id, dto, ct);
+            await _categoryService.UpdateAsync(userId, id, dto, ct);
 
             return NoContent();
         }
         catch (Exception ex)
         {
-            var error = _errorResponse.CreateErrorResponse(ex);
-            return error;
+            return _errorResponse.CreateErrorResponse(ex);
         }
     }
 
@@ -106,14 +88,13 @@ public class CategoryController : Controller
         try
         {
             var userId = GetCurrentUserId();
-            await _repository.DeleteCategoryAsync(userId, id, ct);
+            await _categoryService.DeleteAsync(userId, id, ct);
 
             return NoContent();
         }
         catch (Exception ex)
         {
-            var error = _errorResponse.CreateErrorResponse(ex);
-            return error;
+            return _errorResponse.CreateErrorResponse(ex);
         }
     }
 }

@@ -17,5 +17,6 @@
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\MoneyTracker.Data\MoneyTracker.Data.csproj" />
+    <ProjectReference Include="..\MoneyTracker.Application\MoneyTracker.Application.csproj" />
   </ItemGroup>
 </Project>

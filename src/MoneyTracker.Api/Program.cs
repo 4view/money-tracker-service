@@ -4,11 +4,18 @@ builder.Services.AddDbContext<ApplicationDbContext>(options =>
     options.UseNpgsql(builder.Configuration.GetConnectionString("MTSDb"))
 );
 
+builder.Services.AddScoped<IUserRepository, UserRepository>();
 builder.Services.AddScoped<IExpenseRepository, ExpenseRepository>();
 builder.Services.AddScoped<ICategoryRepository, CategoryRepository>();
 builder.Services.AddScoped<ICategoryLimitRepository, CategoryLimitRepository>();
+
+// Сервисы
+builder.Services.AddScoped<IUserService, UserService>();
+builder.Services.AddScoped<IExpenseService, ExpenseService>();
+builder.Services.AddScoped<ICategoryService, CategoryService>();
+builder.Services.AddScoped<ILimitService, LimitService>();
+
 builder.Services.AddScoped<IErrorResponse, ErrorResponse>();
-builder.Services.AddScoped<IUserRepository, UserRepository>();
 
 builder.Services.AddHttpContextAccessor();
 
@@ -24,9 +31,11 @@ builder
         {
             ValidateIssuerSigningKey = true,
             IssuerSigningKey = new SymmetricSecurityKey(
-                Encoding.ASCII.GetBytes(
+                Encoding.UTF8.GetBytes(
                     builder.Configuration["Jwt:Key"]
-                        ?? "your-secret-key-here-min-32-characters-long!"
+                        ?? throw new InvalidOperationException(
+                            "JWT ключ не задан. Добавьте 'Jwt:Key' в appsettings.json."
+                        )
                 )
             ),
             ValidateIssuer = false,
