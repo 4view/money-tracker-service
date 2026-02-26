@@ -1,97 +1,217 @@
+/* expenses.css - Упорядоченная и чистая версия */
+
 /* Фильтры */
 .filters-container {
-    background: white;
-    border-radius: 12px;
+    background: var(--card-bg);
+    border-radius: 16px;
     padding: 16px;
     margin-bottom: 16px;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    box-shadow: 0 2px 8px var(--shadow-color);
 }
 
 .filter-row {
     display: flex;
     gap: 12px;
-    margin-bottom: 12px;
+    margin-bottom: 16px;
     flex-wrap: wrap;
 }
 
 .filter-group {
     flex: 1;
-    min-width: 120px;
+    min-width: 140px;
 }
 
 .filter-group label {
     display: block;
     font-size: 12px;
-    color: #666;
+    color: var(--text-secondary);
     margin-bottom: 4px;
+    font-weight: 500;
 }
 
 .filter-select {
     width: 100%;
-    padding: 8px;
-    border: 1px solid #e0e0e0;
-    border-radius: 6px;
+    padding: 10px 12px;
+    border: 1px solid var(--border-color);
+    border-radius: 10px;
     font-size: 14px;
-    background: white;
+    background: var(--input-bg);
+    color: var(--text-primary);
+    cursor: pointer;
+}
+
+.filter-buttons {
+    display: flex;
+    gap: 10px;
+    margin-top: 8px;
 }
 
 .filter-btn {
-    padding: 10px 16px;
+    flex: 1;
+    padding: 12px 16px;
     border: none;
-    border-radius: 6px;
-    font-size: 14px;
+    border-radius: 10px;
+    font-size: 15px;
     font-weight: 500;
     cursor: pointer;
-    background: #2196F3;
+    background: var(--accent-color);
     color: white;
-    min-width: 100px;
+    transition: opacity 0.2s;
 }
 
 .filter-btn.reset {
-    background: #6c757d;
-}
-
-.filter-btn:active {
-    opacity: 0.8;
+    background: var(--button-secondary);
+    color: white;
 }
 
 /* Статистика */
 .stats-container {
     display: flex;
     gap: 12px;
-    margin-bottom: 16px;
+    margin-bottom: 20px;
 }
 
 .stat-card {
     flex: 1;
-    background: white;
-    border-radius: 10px;
+    background: var(--card-bg);
+    border-radius: 12px;
     padding: 16px;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-    text-align: center;
+    box-shadow: 0 2px 8px var(--shadow-color);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
 }
 
 .stat-label {
-    display: block;
-    font-size: 12px;
-    color: #666;
+    font-size: 13px;
+    color: var(--text-secondary);
     margin-bottom: 4px;
 }
 
 .stat-value {
     font-size: 20px;
     font-weight: 600;
-    color: #333;
+    color: var(--text-primary);
 }
 
 /* Список трат */
 .expenses-list {
-    background: white;
-    border-radius: 12px;
-    padding: 16px;
-    margin-bottom: 16px;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-    min-height: 200px;
+    background: var(--card-bg);
+    border-radius: 16px;
+    padding: 12px;
+    margin-bottom: 20px;
+    box-shadow: 0 2px 8px var(--shadow-color);
+}
+
+/* ===== ЕДИНАЯ КАРТОЧКА ТРАТЫ ===== */
+.expense-item {
+    background: var(--expense-bg);
+    border-radius: 10px;
+    padding: 12px 14px;
+    margin-bottom: 8px;
+    border-left: 3px solid var(--accent-color);
+    transition: box-shadow 0.2s;
+}
+
+.expense-item:last-child {
+    margin-bottom: 0;
+}
+
+.expense-item:hover {
+    box-shadow: 0 2px 10px var(--shadow-color);
+}
+
+/* Верхний ряд: дата + сумма + кнопки */
+.expense-header {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 6px;
+}
+
+.expense-date {
+    font-size: 12px;
+    color: var(--text-secondary);
+    font-weight: 500;
+    flex-shrink: 0;
+}
+
+.expense-sum {
+    font-size: 15px;
+    font-weight: 700;
+    color: var(--success-color);
+    margin-left: auto;
+    white-space: nowrap;
+}
+
+.expense-actions {
+    display: flex;
+    gap: 4px;
+    flex-shrink: 0;
+}
+
+.expense-actions button {
+    background: transparent;
+    border: none;
+    font-size: 12px;
+    padding: 3px 8px;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: all 0.15s;
+    font-weight: 500;
+}
+
+.expense-actions .edit {
+    color: var(--accent-color);
+}
+
+.expense-actions .delete {
+    color: var(--danger-color);
+}
+
+.expense-actions .edit:hover {
+    background: var(--accent-color);
+    color: white;
+}
+
+.expense-actions .delete:hover {
+    background: var(--danger-color);
+    color: white;
+}
+
+.expense-actions button:active {
+    opacity: 0.7;
+    transform: scale(0.95);
+}
+
+/* Нижний ряд: категория + описание */
+.expense-info {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: wrap;
+}
+
+.expense-category {
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--accent-color);
+    background: var(--category-bg);
+    padding: 3px 10px;
+    border-radius: 20px;
+    white-space: nowrap;
+    flex-shrink: 0;
+}
+
+.expense-description {
+    font-size: 13px;
+    color: var(--text-secondary);
+    word-break: break-word;
+    line-height: 1.4;
+}
+
+.expense-description:empty {
+    display: none;
 }
 
 /* Пагинация */
@@ -100,18 +220,22 @@
     justify-content: center;
     align-items: center;
     gap: 16px;
-    margin-top: 16px;
+    margin-top: 20px;
+    flex-wrap: wrap;
 }
 
 .pagination-btn {
-    padding: 10px 16px;
+    padding: 10px 20px;
     border: none;
-    border-radius: 6px;
-    background: white;
-    color: #2196F3;
-    font-weight: 500;
+    border-radius: 30px;
+    background: var(--card-bg);
+    color: var(--accent-color);
+    font-size: 14px;
+    font-weight: 600;
     cursor: pointer;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    box-shadow: 0 2px 8px var(--shadow-color);
+    transition: all 0.2s;
+    min-width: 120px;
 }
 
 .pagination-btn:disabled {
@@ -120,10 +244,92 @@
 }
 
 .pagination-btn:not(:disabled):active {
-    background: #f0f0f0;
+    transform: translateY(2px);
+    box-shadow: 0 1px 4px var(--shadow-color);
 }
 
 .page-info {
     font-size: 14px;
-    color: #666;
+    color: var(--text-primary);
+    background: var(--card-bg);
+    padding: 6px 20px;
+    border-radius: 30px;
+    box-shadow: 0 2px 4px var(--shadow-color);
+}
+
+/* МОБИЛЬНАЯ ВЕРСИЯ */
+@media (max-width: 600px) {
+    .filter-row {
+        flex-direction: column;
+        gap: 8px;
+    }
+
+    .filter-group {
+        width: 100%;
+        min-width: 100%;
+    }
+
+    .filter-buttons {
+        flex-direction: row;
+    }
+
+    .filter-btn {
+        padding: 10px;
+        font-size: 14px;
+    }
+
+    .stats-container {
+        gap: 8px;
+    }
+
+    .stat-card {
+        padding: 12px;
+    }
+
+    .stat-value {
+        font-size: 18px;
+    }
+
+    .pagination {
+        gap: 8px;
+    }
+
+    .pagination-btn {
+        padding: 8px 16px;
+        min-width: 90px;
+        font-size: 13px;
+    }
+
+    .page-info {
+        font-size: 13px;
+        order: -1;
+        width: 100%;
+        text-align: center;
+    }
+}
+
+/* ОЧЕНЬ МАЛЕНЬКИЕ ЭКРАНЫ */
+@media (max-width: 360px) {
+    .filter-buttons {
+        flex-direction: column;
+    }
+
+    .filter-btn {
+        width: 100%;
+    }
+
+    .pagination {
+        flex-direction: column;
+    }
+
+    .pagination-btn {
+        width: 100%;
+    }
+}
+
+/* ПК ВЕРСИЯ - единый стиль */
+@media (min-width: 768px) {
+    .expense-item {
+        padding: 12px 16px;
+    }
 }

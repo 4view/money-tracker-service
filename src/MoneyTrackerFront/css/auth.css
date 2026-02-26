@@ -1,20 +1,58 @@
+/* CSS переменные для светлой темы (по умолчанию) */
+:root {
+    --auth-bg: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    --auth-card-bg: white;
+    --auth-text-primary: #333;
+    --auth-text-secondary: #666;
+    --auth-input-bg: #f8f9fa;
+    --auth-input-border: #e0e0e0;
+    --auth-input-focus: #667eea;
+    --auth-button-gradient: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    --auth-button-shadow: rgba(102, 126, 234, 0.4);
+    --auth-link-color: #667eea;
+    --auth-error-bg: #fee;
+    --auth-error-color: #dc3545;
+    --auth-success-bg: #d4edda;
+    --auth-success-color: #28a745;
+}
+
+/* Тёмная тема для auth */
+[data-theme="dark"] {
+    --auth-bg: linear-gradient(135deg, #2d2d2d 0%, #1a1a1a 100%);
+    --auth-card-bg: #2d2d2d;
+    --auth-text-primary: #e0e0e0;
+    --auth-text-secondary: #b0b0b0;
+    --auth-input-bg: #3d3d3d;
+    --auth-input-border: #505050;
+    --auth-input-focus: #64b5f6;
+    --auth-button-gradient: linear-gradient(135deg, #5a6ed1 0%, #6a4c9c 100%);
+    --auth-button-shadow: rgba(100, 150, 246, 0.4);
+    --auth-link-color: #64b5f6;
+    --auth-error-bg: #4a2a2a;
+    --auth-error-color: #f44336;
+    --auth-success-bg: #1e3a2e;
+    --auth-success-color: #4caf50;
+}
+
 .auth-container {
     min-height: 100vh;
     display: flex;
     align-items: center;
     justify-content: center;
     padding: 20px;
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    background: var(--auth-bg);
+    transition: background 0.3s ease;
 }
 
 .auth-card {
-    background: white;
+    background: var(--auth-card-bg);
     border-radius: 20px;
     padding: 40px 30px;
     width: 100%;
     max-width: 400px;
     box-shadow: 0 20px 40px rgba(0, 0, 0, 0.2);
     animation: slideUp 0.5s ease;
+    transition: background-color 0.3s ease;
 }
 
 @keyframes slideUp {
@@ -30,19 +68,20 @@
 }
 
 .auth-card h1 {
-    color: #333;
+    color: var(--auth-text-primary);
     font-size: 32px;
     margin-bottom: 8px;
     text-align: center;
     font-weight: 700;
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    background: var(--auth-button-gradient);
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
     background-clip: text;
+    transition: color 0.3s ease;
 }
 
 .auth-card p {
-    color: #666;
+    color: var(--auth-text-secondary);
     text-align: center;
     margin-bottom: 30px;
     font-size: 16px;
@@ -55,7 +94,7 @@
 .form-group label {
     display: block;
     margin-bottom: 8px;
-    color: #333;
+    color: var(--auth-text-primary);
     font-weight: 500;
     font-size: 14px;
 }
@@ -63,29 +102,30 @@
 .form-group input {
     width: 100%;
     padding: 14px 16px;
-    border: 2px solid #e0e0e0;
+    border: 2px solid var(--auth-input-border);
     border-radius: 12px;
     font-size: 16px;
     transition: all 0.3s ease;
-    background: #f8f9fa;
+    background: var(--auth-input-bg);
+    color: var(--auth-text-primary);
 }
 
 .form-group input:focus {
     outline: none;
-    border-color: #667eea;
-    background: white;
+    border-color: var(--auth-input-focus);
+    background: var(--auth-card-bg);
     box-shadow: 0 0 0 4px rgba(102, 126, 234, 0.1);
 }
 
 .form-group input::placeholder {
-    color: #999;
+    color: var(--auth-text-secondary);
     font-size: 14px;
 }
 
 .auth-button {
     width: 100%;
     padding: 16px;
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    background: var(--auth-button-gradient);
     color: white;
     border: none;
     border-radius: 12px;
@@ -96,17 +136,17 @@
     margin-top: 10px;
     position: relative;
     overflow: hidden;
-    box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
+    box-shadow: 0 4px 15px var(--auth-button-shadow);
 }
 
 .auth-button:hover {
     transform: translateY(-2px);
-    box-shadow: 0 6px 20px rgba(102, 126, 234, 0.5);
+    box-shadow: 0 6px 20px var(--auth-button-shadow);
 }
 
 .auth-button:active {
     transform: translateY(0);
-    box-shadow: 0 2px 10px rgba(102, 126, 234, 0.4);
+    box-shadow: 0 2px 10px var(--auth-button-shadow);
 }
 
 .auth-button:disabled {
@@ -118,12 +158,12 @@
 .auth-switch {
     margin-top: 25px;
     text-align: center;
-    color: #666;
+    color: var(--auth-text-secondary);
     font-size: 15px;
 }
 
 .auth-switch a {
-    color: #667eea;
+    color: var(--auth-link-color);
     text-decoration: none;
     font-weight: 600;
     margin-left: 5px;
@@ -138,13 +178,13 @@
     height: 2px;
     bottom: -2px;
     left: 0;
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    background: var(--auth-button-gradient);
     transform: scaleX(0);
     transition: transform 0.3s ease;
 }
 
 .auth-switch a:hover {
-    color: #667eea;
+    color: var(--auth-link-color);
 }
 
 .auth-switch a:hover:after {
@@ -152,15 +192,15 @@
 }
 
 .error-message {
-    background: #fee;
-    color: #dc3545;
+    background: var(--auth-error-bg);
+    color: var(--auth-error-color);
     padding: 14px;
     border-radius: 12px;
     margin-bottom: 20px;
     text-align: center;
     font-size: 14px;
     font-weight: 500;
-    border-left: 4px solid #dc3545;
+    border-left: 4px solid var(--auth-error-color);
     animation: shake 0.5s ease;
 }
 
@@ -181,15 +221,15 @@
 }
 
 .success-message {
-    background: #d4edda;
-    color: #28a745;
+    background: var(--auth-success-bg);
+    color: var(--auth-success-color);
     padding: 14px;
     border-radius: 12px;
     margin-bottom: 20px;
     text-align: center;
     font-size: 14px;
     font-weight: 500;
-    border-left: 4px solid #28a745;
+    border-left: 4px solid var(--auth-success-color);
     animation: slideDown 0.5s ease;
 }
 
@@ -198,30 +238,10 @@
     margin-bottom: 10px;
 }
 
-/* Адаптация для мобильных устройств */
-@media (max-width: 480px) {
-    .auth-card {
-        padding: 30px 20px;
-    }
-
-    .auth-card h1 {
-        font-size: 28px;
-    }
-
-    .auth-button {
-        padding: 14px;
-        font-size: 16px;
-    }
-
-    .form-group input {
-        padding: 12px 14px;
-    }
-}
-
 /* Стили для индикатора загрузки */
 .auth-button.loading {
     color: transparent;
-    background-image: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    background: var(--auth-button-gradient);
     position: relative;
 }
 
@@ -245,15 +265,6 @@
     }
 }
 
-/* Дополнительные стили для улучшения UX */
-.form-group {
-    position: relative;
-}
-
-.form-group input:focus+label {
-    color: #667eea;
-}
-
 /* Стили для пароля */
 input[type="password"] {
     font-family: 'Courier New', monospace;
@@ -265,7 +276,25 @@ input[type="password"]::placeholder {
     font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
 }
 
-/* Добавьте в конец auth.css */
+/* Адаптация для мобильных устройств */
+@media (max-width: 480px) {
+    .auth-card {
+        padding: 30px 20px;
+    }
+
+    .auth-card h1 {
+        font-size: 28px;
+    }
+
+    .auth-button {
+        padding: 14px;
+        font-size: 16px;
+    }
+
+    .form-group input {
+        padding: 12px 14px;
+    }
+}
 
 /* Адаптация для больших экранов */
 @media (min-width: 768px) {
@@ -305,30 +334,5 @@ input[type="password"]::placeholder {
     .auth-switch {
         font-size: 17px;
         margin-top: 30px;
-    }
-}
-
-@media (min-width: 1200px) {
-    .auth-card {
-        max-width: 600px;
-        padding: 60px 50px;
-    }
-
-    .auth-card h1 {
-        font-size: 42px;
-    }
-
-    .auth-card p {
-        font-size: 20px;
-    }
-
-    .form-group input {
-        padding: 18px 20px;
-        font-size: 20px;
-    }
-
-    .auth-button {
-        padding: 20px;
-        font-size: 22px;
     }
 }

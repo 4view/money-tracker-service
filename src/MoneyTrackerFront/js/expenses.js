@@ -36,7 +36,7 @@ async function fetchWithAuth(url, options = {}) {
     const token = localStorage.getItem('token');
 
     if (!token) {
-        alert('Сессия истекла. Пожалуйста, войдите снова.');
+        showToast('Сессия истекла. Войдите снова.', 'error');
         window.location.href = 'login.html';
         return null;
     }
@@ -52,7 +52,7 @@ async function fetchWithAuth(url, options = {}) {
         });
 
         if (response.status === 401) {
-            alert('Сессия истекла. Пожалуйста, войдите снова.');
+            showToast('Сессия истекла. Войдите снова.', 'error');
             localStorage.removeItem('token');
             localStorage.removeItem('user');
             window.location.href = 'login.html';
@@ -213,28 +213,36 @@ function displayExpenses() {
             const formattedDate = date.toLocaleString('ru-RU', {
                 day: '2-digit',
                 month: '2-digit',
-                year: 'numeric',
                 hour: '2-digit',
                 minute: '2-digit'
-            });
+            }).replace(',', '');
 
-            const category = categories.find(c => c.id === expense.categoryId);
-            const categoryName = category ? category.name : 'Без категории';
+            const category = categories.find(c => String(c.id) === String(expense.categoryId));
+            const categoryName = category ? category.name : 'Другое';
+            const description = expense.description || '';
 
             return `
-                <div class="expense-item" data-id="${expense.id}">
-                    <div class="expense-header">
-                        <span class="expense-date">${formattedDate}</span>
-                        <span class="expense-sum">${expense.sum.toFixed(2)} ₽</span>
-                    </div>
-                    <span class="expense-category">${categoryName}</span>
-                    <div class="expense-description">${expense.description || 'Без описания'}</div>
-                    <div class="expense-actions">
-                        <button class="action-link" onclick="editExpense('${expense.id}')">Редактировать</button>
-                        <button class="action-link delete" onclick="deleteExpense('${expense.id}')">Удалить</button>
-                    </div>
+        <div class="expense-item" data-id="${expense.id}">
+            <div class="expense-header">
+                <span class="expense-date">${formattedDate}</span>
+                <div class="expense-actions">
+                    <button class="edit" onclick="editExpense('${expense.id}')">✎ Ред.</button>
+                    <button class="delete" onclick="deleteExpense('${expense.id}')">🗑 Удал.</button>
                 </div>
-            `;
+            </div>
+            
+            <div class="expense-info">
+                <span class="expense-category">${categoryName}</span>
+                ${description ? `
+                    <div class="expense-description">
+                        ${description}
+                    </div>
+                ` : ''}
+                <span class="expense-sum">${expense.sum.toFixed(2)} ₽</span>
+            </div>
+            
+        </div>
+    `;
         }).join('');
     }
 
@@ -323,7 +331,7 @@ async function saveExpenseEdit() {
     const categoryId = document.getElementById('edit-expense-category')?.value;
 
     if (!id || !dateStr || isNaN(sum) || sum <= 0 || !categoryId) {
-        alert('Пожалуйста, заполните все поля');
+        showToast('Заполните все поля', 'warning');
         return;
     }
 
@@ -341,16 +349,16 @@ async function saveExpenseEdit() {
         });
 
         if (response && response.ok) {
-            alert('Трата обновлена');
+            showToast('Трата обновлена', 'success');
             const modal = document.getElementById('edit-expense-modal');
             if (modal) modal.style.display = 'none';
             await loadExpenses(); // Перезагружаем список
         } else {
-            alert('Ошибка при обновлении');
+            showToast('Ошибка при обновлении', 'error');
         }
     } catch (error) {
         console.error('Ошибка:', error);
-        alert('Ошибка соединения');
+        showToast('Ошибка соединения', 'error');
     }
 }
 
@@ -369,16 +377,16 @@ async function confirmDelete() {
         });
 
         if (response && response.ok) {
-            alert('Трата удалена');
+            showToast('Трата удалена', 'success');
             const deleteModal = document.getElementById('delete-modal');
             if (deleteModal) deleteModal.style.display = 'none';
             await loadExpenses(); // Перезагружаем список
         } else {
-            alert('Ошибка при удалении');
+            showToast('Ошибка при удалении', 'error');
         }
     } catch (error) {
         console.error('Ошибка:', error);
-        alert('Ошибка соединения');
+        showToast('Ошибка соединения', 'error');
     }
 }
 

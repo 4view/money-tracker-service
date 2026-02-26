@@ -67,6 +67,7 @@ public class CategoryLimitRepository : ICategoryLimitRepository
 
         var expenseRepo = new ExpenseRepository(_db, _httpContextAccessor);
         var spentAmount = await expenseRepo.GetSumByCategoryAndPeriodAsync(
+            userId,
             categoryId,
             from,
             to,
@@ -143,6 +144,7 @@ public class CategoryLimitRepository : ICategoryLimitRepository
         }
 
         var existingLimit = await _db.Set<CategoryLimitEntity>()
+            .Include(cl => cl.Category)
             .FirstOrDefaultAsync(cl => cl.Id == limitId && cl.UserId == userId, ct);
 
         if (existingLimit == null)

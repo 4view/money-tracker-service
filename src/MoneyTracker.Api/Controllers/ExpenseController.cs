@@ -140,7 +140,11 @@ public class ExpenseController : Controller
     }
 
     [HttpPut("{id}")]
-    public async Task<IActionResult> UpdateExpense(Guid id, ExpenseDto dto, CancellationToken ct)
+    public async Task<IActionResult> UpdateExpense(
+        Guid id,
+        [FromBody] ExpenseDto dto,
+        CancellationToken ct
+    )
     {
         try
         {

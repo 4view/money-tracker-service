@@ -44,8 +44,8 @@ public class LimitController : Controller
     public async Task<IActionResult> GetCategoryLimit(
         Guid limitId,
         Guid categoryId,
-        int startDate,
-        int endDate,
+        long startDate,
+        long endDate,
         CancellationToken ct
     )
     {
@@ -71,7 +71,10 @@ public class LimitController : Controller
     }
 
     [HttpPost]
-    public async Task<IActionResult> AddCategoryLimit([FromBody] BaseLimitDto dto, CancellationToken ct)
+    public async Task<IActionResult> AddCategoryLimit(
+        [FromBody] BaseLimitDto dto,
+        CancellationToken ct
+    )
     {
         try
         {

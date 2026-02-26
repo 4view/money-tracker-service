@@ -23,6 +23,10 @@ document.addEventListener('DOMContentLoaded', function () {
     checkCameraAvailability();
     loadCategories(); // Загружаем категории
 
+    if (typeof displayStatistics === 'function') {
+        displayStatistics();
+    }
+
     // Проверяем загрузку библиотеки
     if (typeof Html5Qrcode === 'undefined') {
         const statusDiv = document.getElementById('camera-status');
@@ -58,7 +62,7 @@ async function fetchWithAuth(url, options = {}) {
     const token = localStorage.getItem('token');
 
     if (!token) {
-        alert('Сессия истекла. Пожалуйста, войдите снова.');
+        showToast('Сессия истекла. Войдите снова.', 'error');
         window.location.href = 'login.html';
         return;
     }
@@ -86,25 +90,52 @@ document.addEventListener('touchstart', (e) => {
     }
 }, { passive: false });
 
-// Функция для загрузки категорий с сервера
+// Загрузка категорий
 async function loadCategories() {
     try {
-        const response = await fetchWithAuth(`${API_BASE_URL}/category`, {
-            method: 'GET'
-        });
-
+        const response = await fetchWithAuth(`${API_BASE_URL}/category`);
         if (response && response.ok) {
             categories = await response.json();
-            console.log('✅ Категории загружены:', categories);
-            updateCategorySelect();
-        } else if (response && response.status === 401) {
-            alert('Сессия истекла. Пожалуйста, войдите снова.');
-            window.location.href = 'login.html';
+            console.log('Загруженные категории:', categories);
+
+            // Убедимся, что у каждой категории есть id и name
+            categories = categories.map(cat => ({
+                id: cat.id,
+                name: cat.name
+            }));
+
+            // Заполняем фильтр категорий
+            const categoryFilter = document.getElementById('category-filter');
+            const editCategorySelect = document.getElementById('edit-expense-category');
+
+            if (categoryFilter) {
+                categoryFilter.innerHTML = '<option value="">Все категории</option>';
+                if (categories && categories.length > 0) {
+                    categories.forEach(cat => {
+                        const option = document.createElement('option');
+                        option.value = cat.id;
+                        option.textContent = cat.name;
+                        categoryFilter.appendChild(option);
+                    });
+                }
+            }
+
+            if (editCategorySelect) {
+                editCategorySelect.innerHTML = '';
+                if (categories && categories.length > 0) {
+                    categories.forEach(cat => {
+                        const option = document.createElement('option');
+                        option.value = cat.id;
+                        option.textContent = cat.name;
+                        editCategorySelect.appendChild(option);
+                    });
+                }
+            }
         } else {
             console.error('Ошибка загрузки категорий:', response?.status);
         }
     } catch (error) {
-        console.error('❌ Не удалось загрузить категории:', error);
+        console.error('Ошибка загрузки категорий:', error);
     }
 }
 
@@ -291,6 +322,14 @@ function saveEdits() {
         const selectedOption = editSelect.options[editSelect.selectedIndex];
         currentQrData.CategoryId = editSelect.value;
         currentQrData.CategoryName = selectedOption ? selectedOption.text : '';
+
+        // Запоминаем последнюю выбранную категорию
+        if (editSelect.value) {
+            localStorage.setItem('lastUsedCategory', JSON.stringify({
+                id: editSelect.value,
+                name: selectedOption ? selectedOption.text : ''
+            }));
+        }
     }
     else if (editField.value === 'date') {
         if (editDate && editDate.value) {
@@ -352,22 +391,41 @@ async function checkCameraAvailability() {
     }
 }
 
+// ─── ЗАПОМИНАНИЕ ПОСЛЕДНЕЙ КАТЕГОРИИ ───────────────────────────────────────
+
+/** Возвращает последнюю выбранную категорию из localStorage или null */
+function getLastUsedCategory() {
+    try {
+        const saved = localStorage.getItem('lastUsedCategory');
+        if (!saved) return null;
+        const cat = JSON.parse(saved);
+        // Проверяем что категория всё ещё существует в списке
+        if (categories.length > 0 && !categories.find(c => c.id === cat.id)) {
+            localStorage.removeItem('lastUsedCategory');
+            return null;
+        }
+        return cat;
+    } catch {
+        return null;
+    }
+}
+
 // Функция для парсинга фискальных чеков (формат ФНС)
 function parseFiscalReceiptQR(qrText) {
     console.log('Парсинг фискального чека:', qrText);
-    
+
     // Разбираем параметры
     const params = {};
     qrText.split('&').forEach(param => {
         const [key, value] = param.split('=');
         params[key] = value;
     });
-    
+
     console.log('Разобранные параметры:', params);
-    
+
     let purchaseTime = null;
     let sum = 0;
-    
+
     // Парсим дату из параметра t (формат: 20260109T1652)
     if (params.t) {
         try {
@@ -378,34 +436,34 @@ function parseFiscalReceiptQR(qrText) {
             const day = parseInt(dateStr.substring(6, 8));
             const hours = parseInt(dateStr.substring(9, 11));
             const minutes = parseInt(dateStr.substring(11, 13));
-            
+
             const date = new Date(year, month, day, hours, minutes);
             purchaseTime = date.getTime();
-            
+
             console.log('Распознанная дата:', date.toLocaleString());
         } catch (e) {
             console.error('Ошибка парсинга даты:', e);
         }
     }
-    
+
     // Парсим сумму из параметра s
     if (params.s) {
         sum = parseFloat(params.s);
     }
-    
+
+    const savedCategory = getLastUsedCategory();
+
     return {
         purchaseTime: purchaseTime,
         entryTime: Date.now(),
         Sum: sum,
-        Description: '', // Оставляем пустым
-        CategoryId: null,
-        CategoryName: null,
+        Description: '',
+        CategoryId: savedCategory ? savedCategory.id : null,
+        CategoryName: savedCategory ? savedCategory.name : null,
+        categoryAutoFilled: !!savedCategory,
         AdditionalData: params
     };
 }
-
-
-// Функция для парсинга QR-кода чека
 function parseReceiptQR(qrText) {
     console.log('Парсинг QR-кода:', qrText);
 
@@ -436,13 +494,18 @@ function parseReceiptQR(qrText) {
                     : jsonData.date;
             }
 
+            const savedCategory = getLastUsedCategory();
+            const categoryId   = jsonData.categoryId || (savedCategory ? savedCategory.id : null);
+            const categoryName = jsonData.category || jsonData.categoryName || (savedCategory ? savedCategory.name : null);
+
             return {
                 purchaseTime: purchaseTime,
                 entryTime: Date.now(),
                 Sum: parseFloat(jsonData.amount || jsonData.sum || jsonData.total || jsonData.price || 0),
                 Description: jsonData.description || jsonData.name || jsonData.item || jsonData.product || '',
-                CategoryId: jsonData.categoryId || null,
-                CategoryName: jsonData.category || jsonData.categoryName || null,
+                CategoryId: categoryId,
+                CategoryName: categoryName,
+                categoryAutoFilled: !jsonData.categoryId && !!savedCategory,
                 AdditionalData: jsonData
             };
         }
@@ -483,19 +546,22 @@ function parsePlainTextQR(qrText) {
         const hours = parseInt(timeMatch[1]);
         const minutes = parseInt(timeMatch[2]);
         const seconds = parseInt(timeMatch[3]) || 0;
-        
+
         const date = new Date(purchaseTime);
         date.setHours(hours, minutes, seconds);
         purchaseTime = date.getTime();
     }
 
+    const savedCategory = getLastUsedCategory();
+
     return {
         purchaseTime: purchaseTime,
         entryTime: Date.now(),
         Sum: sum,
-        Description: '', // Оставляем пустым
-        CategoryId: null,
-        CategoryName: null,
+        Description: '',
+        CategoryId: savedCategory ? savedCategory.id : null,
+        CategoryName: savedCategory ? savedCategory.name : null,
+        categoryAutoFilled: !!savedCategory,
         AdditionalData: { rawData: qrText }
     };
 }
@@ -545,6 +611,26 @@ function displayScanResult(qrData) {
         }
     }
 
+    // Определяем статус заполненности
+    const hasCategory    = !!qrData.CategoryId;
+    const hasDescription = !!(qrData.Description && qrData.Description.trim());
+    const isAutoFilled   = qrData.categoryAutoFilled && hasCategory;
+
+    if (hasCategory && hasDescription) {
+        status.textContent = '✓ Готово к сохранению';
+        status.className = 'status success';
+    } else {
+        status.textContent = '✓ Требуется заполнение';
+        status.className = 'status warning';
+    }
+
+    // Подсказка об автоподстановке категории
+    const autoHint = isAutoFilled
+        ? `<div class="auto-category-hint">
+               ↩ Категория из прошлого сканирования
+           </div>`
+        : '';
+
     details.innerHTML = `
         <div class="detail-row">
             <span class="detail-label">Дата покупки:</span>
@@ -564,14 +650,19 @@ function displayScanResult(qrData) {
         <div class="detail-row editable" data-field="description" id="description-row">
             <span class="detail-label">Описание:</span>
             <span class="detail-value">
-                ${qrData.Description || '<span style="color: #999;">не указано</span>'}
+                ${hasDescription ? qrData.Description : '<span style="color: #999;">не указано</span>'}
                 <button class="edit-btn" id="edit-description">Изменить</button>
             </span>
         </div>
         <div class="detail-row editable" data-field="category" id="category-row">
             <span class="detail-label">Категория:</span>
             <span class="detail-value">
-                ${categoryName}
+                <span class="category-value-wrap">
+                    ${hasCategory
+                        ? `<span class="category-chip">${categoryName}</span>`
+                        : '<span style="color: #999;">не выбрана</span>'}
+                    ${autoHint}
+                </span>
                 <button class="edit-btn" id="edit-category">Изменить</button>
             </span>
         </div>
@@ -608,13 +699,13 @@ async function resetAfterSave() {
 async function saveExpense(qrData) {
     // Проверяем заполнены ли обязательные поля
     if (!qrData.Description || qrData.Description.trim() === '') {
-        alert('Пожалуйста, укажите описание расхода');
+        showToast('Укажите описание расхода', 'warning');
         showEditModal('description');
         return;
     }
 
     if (!qrData.CategoryId) {
-        alert('Пожалуйста, выберите категорию');
+        showToast('Выберите категорию', 'warning');
         showEditModal('category');
         return;
     }
@@ -624,11 +715,13 @@ async function saveExpense(qrData) {
 
         // Для отправки на сервер используем дату покупки
         const expenseToSave = {
-            Time: qrData.purchaseTime || Date.now(), // Если даты покупки нет, используем текущую
+            Time: qrData.purchaseTime || Date.now(),
             Sum: qrData.Sum,
             Description: qrData.Description,
-            CategoryId: qrData.CategoryId
+            CategoryName: qrData.CategoryName
         };
+
+        console.log('Отправляемые данные на сервер:', expenseToSave);
 
         const response = await fetchWithAuth(`${API_BASE_URL}/expense/scan-qr`, {
             method: 'POST',
@@ -640,17 +733,32 @@ async function saveExpense(qrData) {
         const result = await response.json();
 
         if (response.ok) {
-            alert('Расход успешно добавлен!');
+            // Находим название категории по ID
+            const category = categories.find(c => c.id === qrData.CategoryId);
+            const categoryName = category ? category.name : qrData.CategoryName || 'Другое';
 
+            // Сохраняем категорию как последнюю использованную
+            if (qrData.CategoryId) {
+                localStorage.setItem('lastUsedCategory', JSON.stringify({
+                    id: qrData.CategoryId,
+                    name: categoryName
+                }));
+            }
+
+            showToast('Расход успешно добавлен!', 'success');
+
+            // ВАЖНО: сохраняем все данные, включая категорию
             const newScan = {
                 purchaseTime: qrData.purchaseTime,
                 entryTime: qrData.entryTime,
                 Sum: qrData.Sum,
                 Description: qrData.Description || 'Без описания',
-                CategoryId: qrData.CategoryId,
-                CategoryName: qrData.CategoryName,
+                CategoryId: qrData.CategoryId,        // <-- ОБЯЗАТЕЛЬНО сохраняем ID
+                CategoryName: categoryName,            // <-- ОБЯЗАТЕЛЬНО сохраняем название
                 savedAt: new Date().toISOString()
             };
+
+            console.log('Сохраняем в историю:', newScan);
 
             lastScannedData.unshift(newScan);
 
@@ -673,7 +781,7 @@ async function saveExpense(qrData) {
             console.log('Готов к новому сканированию');
         }
         else {
-            alert('Ошибка при сохранении: ' + (result.message || 'Неизвестная ошибка'));
+            showToast('Ошибка при сохранении: ' + (result.message || 'Неизвестная ошибка'), 'error');
 
             if (response.status === 401) {
                 localStorage.removeItem('token');
@@ -683,7 +791,7 @@ async function saveExpense(qrData) {
         }
     } catch (error) {
         console.error('Ошибка при сохранении:', error);
-        alert('Ошибка соединения с сервером. Проверьте что backend запущен на порту 5183');
+        showToast('Ошибка соединения с сервером', 'error');
     }
 }
 
@@ -728,17 +836,23 @@ function updateScansList() {
         const description = scan.Description || 'Без описания';
         const needsCollapse = description.length > 50;
 
+        // Получаем название категории
+        const categoryName = scan.CategoryName || 'Другое';
+
         return `
             <div class="expense-item" data-scan-index="${index}">
-                <div class="dates-container">
-                    <div class="purchase-date">
-                        <span class="date-label">Покупка:</span>
-                        ${formattedPurchaseDate}
+                <div class="expense-header">
+                    <div class="expense-date-info">
+                        <div class="purchase-date">
+                            <span class="date-label">Покупка:</span>
+                            ${formattedPurchaseDate}
+                        </div>
+                        <div class="added-date">
+                            <span class="date-label">Занесено:</span>
+                            ${formattedEntryDate}
+                        </div>
                     </div>
-                    <div class="added-date">
-                        <span class="date-label">Занесено:</span>
-                        ${formattedEntryDate}
-                    </div>
+                    <span class="expense-category">${categoryName}</span>
                 </div>
                 <div class="scan-description">
                     <div id="${descId}" class="description-text ${needsCollapse ? 'collapsed' : ''}">
@@ -851,13 +965,13 @@ async function startScanner() {
     debugMobileMode();
 
     if (typeof Html5Qrcode === 'undefined') {
-        alert('Ошибка: библиотека сканирования не загружена. Попробуйте обновить страницу.');
+        showToast('Библиотека сканирования не загружена. Обновите страницу.', 'error', 5000);
         return;
     }
 
     try {
         if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
-            alert('Ваш браузер не поддерживает доступ к камере');
+            showToast('Ваш браузер не поддерживает доступ к камере', 'error', 5000);
             return;
         }
 
@@ -913,7 +1027,7 @@ async function startScanner() {
                             currentQrData = qrData;
                             displayScanResult(qrData);
                         } else {
-                            alert('Не удалось распознать данные чека');
+                            showToast('Не удалось распознать данные чека', 'error');
                         }
                     },
                     (error) => { }
@@ -930,12 +1044,12 @@ async function startScanner() {
                     }
                 });
             } else {
-                alert('Камера не найдена. Убедитесь что камера подключена и доступ к ней разрешен.');
+                showToast('Камера не найдена. Разрешите доступ в настройках браузера.', 'error', 5000);
             }
         } catch (cameraError) {
             console.error('Ошибка получения камер:', cameraError);
 
-            alert('Не удалось получить список камер. Попробуйте разрешить доступ к камере в настройках браузера.');
+            showToast('Не удалось получить список камер. Разрешите доступ к камере.', 'warning', 5000);
 
             try {
                 await html5QrCode.start(
@@ -949,14 +1063,14 @@ async function startScanner() {
                             currentQrData = qrData;
                             displayScanResult(qrData);
                         } else {
-                            alert('Не удалось распознать данные чека');
+                            showToast('Не удалось распознать данные чека', 'error');
                         }
                     },
                     (error) => { }
                 );
             } catch (fallbackError) {
                 console.error('Ошибка альтернативного запуска:', fallbackError);
-                alert('Не удалось запустить камеру. Проверьте разрешения.');
+                showToast('Не удалось запустить камеру. Проверьте разрешения.', 'error', 5000);
             }
         }
     } catch (error) {
@@ -964,14 +1078,14 @@ async function startScanner() {
 
         let errorMessage = 'Ошибка доступа к камере';
         if (error.name === 'NotAllowedError') {
-            errorMessage = 'Доступ к камере запрещен. Пожалуйста, разрешите доступ к камере в настройках браузера.';
+            errorMessage = 'Доступ к камере запрещён. Разрешите в настройках браузера.';
         } else if (error.name === 'NotFoundError') {
             errorMessage = 'Камера не найдена на вашем устройстве.';
         } else if (error.message) {
             errorMessage = 'Ошибка доступа к камере: ' + error.message;
         }
 
-        alert(errorMessage);
+        showToast(errorMessage, 'error', 5000);
 
         const statusDiv = getElement('camera-status');
         if (statusDiv) {

@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="ru">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Лимиты — MoneyTracker</title>
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="css/limits.css">
+</head>
+
+<body>
+    <div class="container">
+
+        <!-- Шапка -->
+        <div class="header">
+            <div class="nav-header">
+                <a href="index.html" class="back-btn">Назад</a>
+                <h1>Лимиты</h1>
+                <div class="user-info" id="user-info">
+                    <span class="user-name" id="user-name"></span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Выбор периода -->
+        <div class="period-card">
+            <div class="period-label">Период расчёта</div>
+            <div class="period-selectors">
+                <div class="period-group">
+                    <label for="period-month">Месяц</label>
+                    <select id="period-month" class="period-select">
+                        <option value="1">Январь</option>
+                        <option value="2">Февраль</option>
+                        <option value="3">Март</option>
+                        <option value="4">Апрель</option>
+                        <option value="5">Май</option>
+                        <option value="6">Июнь</option>
+                        <option value="7">Июль</option>
+                        <option value="8">Август</option>
+                        <option value="9">Сентябрь</option>
+                        <option value="10">Октябрь</option>
+                        <option value="11">Ноябрь</option>
+                        <option value="12">Декабрь</option>
+                    </select>
+                </div>
+                <div class="period-group">
+                    <label for="period-year">Год</label>
+                    <select id="period-year" class="period-select">
+                        <!-- заполняется JS -->
+                    </select>
+                </div>
+                <button class="period-apply-btn" id="apply-period">Обновить</button>
+            </div>
+        </div>
+
+        <!-- Форма добавления лимита -->
+        <div class="add-limit-card" id="add-limit-card">
+            <div class="add-limit-title">
+                <span class="add-limit-icon">＋</span>
+                Новый лимит
+            </div>
+            <div class="add-limit-form">
+                <div class="add-limit-field">
+                    <label for="new-limit-category">Категория</label>
+                    <select id="new-limit-category" class="limit-select">
+                        <option value="">Выберите категорию</option>
+                    </select>
+                </div>
+                <div class="add-limit-field">
+                    <label for="new-limit-amount">Лимит (₽)</label>
+                    <input type="number" id="new-limit-amount" class="limit-input" placeholder="0.00" step="0.01"
+                        min="0.01">
+                </div>
+                <button class="add-limit-btn" id="add-limit-btn">Добавить</button>
+            </div>
+        </div>
+
+        <!-- Список лимитов с прогресс-барами -->
+        <div class="limits-section">
+            <div class="limits-section-title">Мои лимиты</div>
+            <div id="limits-list" class="limits-list">
+                <div class="limits-loading">Загрузка...</div>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- Модальное окно редактирования лимита -->
+    <div id="edit-limit-modal" class="modal">
+        <div class="modal-content">
+            <h3>Изменить лимит</h3>
+            <input type="hidden" id="edit-limit-id">
+            <input type="hidden" id="edit-limit-category-id">
+
+            <div class="form-group">
+                <label class="modal-label">Категория</label>
+                <div class="modal-category-name" id="edit-category-display">—</div>
+            </div>
+
+            <div class="form-group">
+                <label class="modal-label" for="edit-limit-amount">Новый лимит (₽)</label>
+                <input type="number" id="edit-limit-amount" class="modal-input" placeholder="0.00" step="0.01"
+                    min="0.01">
+            </div>
+
+            <div class="modal-buttons">
+                <button class="modal-btn save" id="save-limit-edit">Сохранить</button>
+                <button class="modal-btn cancel" id="cancel-limit-edit">Отмена</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Модальное окно подтверждения удаления -->
+    <div id="delete-limit-modal" class="modal">
+        <div class="modal-content delete-modal">
+            <h3>Удалить лимит?</h3>
+            <p id="delete-limit-message">Вы уверены, что хотите удалить этот лимит?</p>
+            <div class="modal-buttons">
+                <button class="modal-btn delete" id="confirm-limit-delete">Удалить</button>
+                <button class="modal-btn cancel" id="cancel-limit-delete">Отмена</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="js/toast.js"></script>
+    <script src="js/theme.js"></script>
+    <script src="js/auth-check.js"></script>
+    <script src="js/limits.js"></script>
+</body>
+
+</html>

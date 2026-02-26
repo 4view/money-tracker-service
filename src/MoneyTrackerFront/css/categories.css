@@ -1,14 +1,15 @@
 /* Контейнер добавления категории */
 .add-category-container {
-    background: white;
+    background: var(--card-bg);
     border-radius: 12px;
     padding: 16px;
     margin-bottom: 12px;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    box-shadow: 0 2px 8px var(--shadow-color);
+    transition: background-color 0.3s ease;
 }
 
 .add-category-container h3 {
-    color: #333;
+    color: var(--text-primary);
     font-size: 16px;
     margin-bottom: 12px;
     font-weight: 600;
@@ -23,18 +24,25 @@
 .category-input {
     flex: 1;
     padding: 10px;
-    border: 1px solid #e0e0e0;
+    border: 1px solid var(--border-color);
     border-radius: 6px;
     font-size: 14px;
+    background: var(--input-bg);
+    color: var(--text-primary);
+    transition: all 0.3s ease;
 }
 
 .category-input:focus {
     outline: none;
-    border-color: #2196F3;
+    border-color: var(--accent-color);
+}
+
+.category-input::placeholder {
+    color: var(--text-tertiary);
 }
 
 .add-btn {
-    background: #2196F3;
+    background: var(--accent-color);
     color: white;
     border: none;
     padding: 10px 16px;
@@ -44,22 +52,24 @@
     cursor: pointer;
     white-space: nowrap;
     min-width: 80px;
+    transition: all 0.3s ease;
 }
 
 .add-btn:active {
-    background: #1976D2;
+    background: var(--accent-hover);
 }
 
 /* Контейнер списка категорий */
 .categories-container {
-    background: white;
+    background: var(--card-bg);
     border-radius: 12px;
     padding: 16px;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    box-shadow: 0 2px 8px var(--shadow-color);
+    transition: background-color 0.3s ease;
 }
 
 .categories-container h3 {
-    color: #333;
+    color: var(--text-primary);
     font-size: 16px;
     margin-bottom: 12px;
     font-weight: 600;
@@ -73,19 +83,20 @@
 
 /* Элемент категории */
 .category-item {
-    background: #f8f9fa;
+    background: var(--expense-bg);
     border-radius: 8px;
     padding: 12px;
     display: flex;
     justify-content: space-between;
     align-items: center;
-    border-left: 3px solid #2196F3;
+    border-left: 3px solid var(--accent-color);
+    transition: background-color 0.3s ease, border-color 0.3s ease;
 }
 
 .category-name {
     font-size: 15px;
     font-weight: 500;
-    color: #333;
+    color: var(--text-primary);
 }
 
 .category-actions {
@@ -96,18 +107,38 @@
 .category-link {
     background: none;
     border: none;
-    color: #2196F3;
+    color: var(--accent-color);
     font-size: 13px;
     font-weight: 500;
     cursor: pointer;
     padding: 4px 8px;
     border-radius: 4px;
+    transition: all 0.2s ease;
 }
 
 .category-link.delete {
-    color: #dc3545;
+    color: var(--danger-color);
 }
 
 .category-link:active {
     background: rgba(0, 0, 0, 0.05);
+}
+
+/* Пустое состояние */
+.empty-categories {
+    text-align: center;
+    padding: 30px 20px;
+    color: var(--text-tertiary);
+    font-size: 14px;
+    background: var(--expense-bg);
+    border-radius: 8px;
+}
+
+.loading-spinner {
+    text-align: center;
+    padding: 30px;
+    color: var(--text-tertiary);
+    background: var(--expense-bg);
+    border-radius: 8px;
+    font-size: 14px;
 }

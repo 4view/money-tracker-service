@@ -187,20 +187,4 @@ public class ExpenseRepository : IExpenseRepository
 
         return defaultCategory;
     }
-
-    public async Task<decimal> GetSumByCategoryAndPeriodAsync(
-        Guid categoryId,
-        long from,
-        long to,
-        CancellationToken ct
-    )
-    {
-        var userId = GetCurrentUserId();
-
-        return await _db.Set<ExpenseEntity>()
-            .Where(e => e.UserId == userId)
-            .Where(e => e.CategoryId == categoryId)
-            .Where(e => e.TimeUnix >= from && e.TimeUnix < to)
-            .SumAsync(e => e.Sum, ct);
-    }
 }

@@ -1,0 +1,489 @@
+/* limits.css */
+
+/* ===== КАРТОЧКА ПЕРИОДА ===== */
+.period-card {
+    background: var(--card-bg);
+    border-radius: 14px;
+    padding: 16px;
+    margin-bottom: 14px;
+    box-shadow: 0 2px 8px var(--shadow-color);
+}
+
+.period-label {
+    font-size: 12px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: var(--text-tertiary);
+    margin-bottom: 10px;
+}
+
+.period-selectors {
+    display: flex;
+    gap: 10px;
+    align-items: flex-end;
+    flex-wrap: wrap;
+}
+
+.period-group {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    flex: 1;
+    min-width: 110px;
+}
+
+.period-group label {
+    font-size: 12px;
+    color: var(--text-secondary);
+    font-weight: 500;
+}
+
+.period-select {
+    padding: 9px 10px;
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    font-size: 14px;
+    background: var(--input-bg);
+    color: var(--text-primary);
+    cursor: pointer;
+}
+
+.period-apply-btn {
+    padding: 9px 18px;
+    background: var(--accent-color);
+    color: white;
+    border: none;
+    border-radius: 8px;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: opacity 0.2s;
+    white-space: nowrap;
+    align-self: flex-end;
+}
+
+.period-apply-btn:active {
+    opacity: 0.8;
+}
+
+/* ===== ФОРМА ДОБАВЛЕНИЯ ЛИМИТА ===== */
+.add-limit-card {
+    background: var(--card-bg);
+    border-radius: 14px;
+    padding: 16px;
+    margin-bottom: 14px;
+    box-shadow: 0 2px 8px var(--shadow-color);
+    border-left: 3px solid var(--accent-color);
+}
+
+.add-limit-title {
+    font-size: 15px;
+    font-weight: 600;
+    color: var(--text-primary);
+    margin-bottom: 14px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.add-limit-icon {
+    width: 24px;
+    height: 24px;
+    background: var(--accent-color);
+    color: white;
+    border-radius: 50%;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 16px;
+    font-weight: 400;
+    line-height: 1;
+    flex-shrink: 0;
+}
+
+.add-limit-form {
+    display: flex;
+    gap: 10px;
+    align-items: flex-end;
+    flex-wrap: wrap;
+}
+
+.add-limit-field {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    flex: 1;
+    min-width: 130px;
+}
+
+.add-limit-field label {
+    font-size: 12px;
+    color: var(--text-secondary);
+    font-weight: 500;
+}
+
+.limit-select,
+.limit-input {
+    padding: 10px 12px;
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    font-size: 14px;
+    background: var(--input-bg);
+    color: var(--text-primary);
+    width: 100%;
+    transition: border-color 0.2s;
+}
+
+.limit-select:focus,
+.limit-input:focus {
+    outline: none;
+    border-color: var(--accent-color);
+}
+
+.add-limit-btn {
+    padding: 10px 20px;
+    background: var(--accent-color);
+    color: white;
+    border: none;
+    border-radius: 8px;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: opacity 0.2s;
+    align-self: flex-end;
+    white-space: nowrap;
+}
+
+.add-limit-btn:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+}
+
+.add-limit-btn:not(:disabled):active {
+    opacity: 0.8;
+}
+
+/* ===== СЕКЦИЯ ЛИМИТОВ ===== */
+.limits-section {
+    background: var(--card-bg);
+    border-radius: 14px;
+    padding: 16px;
+    box-shadow: 0 2px 8px var(--shadow-color);
+}
+
+.limits-section-title {
+    font-size: 12px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: var(--text-tertiary);
+    margin-bottom: 14px;
+}
+
+.limits-list {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.limits-loading {
+    text-align: center;
+    padding: 30px;
+    color: var(--text-tertiary);
+    font-size: 14px;
+}
+
+.limits-empty {
+    text-align: center;
+    padding: 30px 20px;
+    color: var(--text-tertiary);
+    font-size: 14px;
+    background: var(--expense-bg);
+    border-radius: 10px;
+}
+
+/* ===== КАРТОЧКА ЛИМИТА ===== */
+.limit-item {
+    background: var(--expense-bg);
+    border-radius: 10px;
+    padding: 14px;
+    border-left: 3px solid var(--accent-color);
+    transition: box-shadow 0.2s;
+    animation: fadeInLimit 0.3s ease forwards;
+}
+
+@keyframes fadeInLimit {
+    from { opacity: 0; transform: translateY(6px); }
+    to   { opacity: 1; transform: translateY(0); }
+}
+
+.limit-item.over-budget {
+    border-left-color: var(--danger-color);
+}
+
+.limit-item.near-budget {
+    border-left-color: var(--warning-color);
+}
+
+.limit-item:hover {
+    box-shadow: 0 2px 10px var(--shadow-color);
+}
+
+/* Верхняя строка карточки */
+.limit-header {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 10px;
+}
+
+.limit-category-name {
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--text-primary);
+    flex: 1;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.limit-badge {
+    font-size: 11px;
+    font-weight: 700;
+    padding: 2px 8px;
+    border-radius: 20px;
+    white-space: nowrap;
+}
+
+.limit-badge.ok {
+    background: rgba(76, 175, 80, 0.15);
+    color: var(--success-color);
+}
+
+.limit-badge.warning {
+    background: rgba(255, 183, 77, 0.2);
+    color: var(--warning-color);
+}
+
+.limit-badge.danger {
+    background: rgba(244, 67, 54, 0.15);
+    color: var(--danger-color);
+}
+
+.limit-actions {
+    display: flex;
+    gap: 4px;
+    flex-shrink: 0;
+}
+
+.limit-actions button {
+    background: transparent;
+    border: none;
+    font-size: 12px;
+    padding: 3px 8px;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: all 0.15s;
+    font-weight: 500;
+}
+
+.limit-actions .limit-edit {
+    color: var(--accent-color);
+}
+
+.limit-actions .limit-delete {
+    color: var(--danger-color);
+}
+
+.limit-actions .limit-edit:hover {
+    background: var(--accent-color);
+    color: white;
+}
+
+.limit-actions .limit-delete:hover {
+    background: var(--danger-color);
+    color: white;
+}
+
+/* Прогресс-бар */
+.limit-progress-wrap {
+    position: relative;
+    height: 10px;
+    background: var(--border-color);
+    border-radius: 10px;
+    overflow: hidden;
+    margin-bottom: 8px;
+}
+
+.limit-progress-bar {
+    height: 100%;
+    border-radius: 10px;
+    transition: width 0.6s cubic-bezier(0.4, 0, 0.2, 1), background-color 0.3s;
+    min-width: 4px;
+    position: relative;
+    overflow: hidden;
+}
+
+/* Анимированный блеск на баре */
+.limit-progress-bar::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -60%;
+    width: 40%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255,255,255,0.35), transparent);
+    animation: shimmer 2.2s infinite;
+}
+
+@keyframes shimmer {
+    0%   { left: -60%; }
+    100% { left: 120%; }
+}
+
+.limit-progress-bar.ok {
+    background: linear-gradient(90deg, var(--success-color), #66bb6a);
+}
+
+.limit-progress-bar.warning {
+    background: linear-gradient(90deg, var(--warning-color), #ffd54f);
+}
+
+.limit-progress-bar.danger {
+    background: linear-gradient(90deg, var(--danger-color), #ef5350);
+}
+
+/* Нижняя строка — суммы */
+.limit-amounts {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 4px;
+}
+
+.limit-spent {
+    font-size: 12px;
+    color: var(--text-secondary);
+}
+
+.limit-spent strong {
+    color: var(--text-primary);
+}
+
+.limit-remaining {
+    font-size: 13px;
+    font-weight: 700;
+}
+
+.limit-remaining.ok {
+    color: var(--success-color);
+}
+
+.limit-remaining.warning {
+    color: var(--warning-color);
+}
+
+.limit-remaining.danger {
+    color: var(--danger-color);
+}
+
+.limit-total {
+    font-size: 12px;
+    color: var(--text-tertiary);
+    width: 100%;
+    text-align: right;
+    margin-top: 2px;
+}
+
+/* Состояние загрузки в карточке */
+.limit-item.skeleton {
+    pointer-events: none;
+}
+
+.limit-item.skeleton .limit-category-name,
+.limit-item.skeleton .limit-progress-wrap,
+.limit-item.skeleton .limit-amounts {
+    background: var(--border-color);
+    border-radius: 6px;
+    color: transparent;
+    animation: pulse 1.5s infinite;
+}
+
+@keyframes pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.5; }
+}
+
+/* ===== МОДАЛЬНОЕ ОКНО - дополнение ===== */
+.modal-label {
+    display: block;
+    font-size: 13px;
+    color: var(--text-secondary);
+    margin-bottom: 4px;
+    font-weight: 500;
+}
+
+.modal-category-name {
+    font-size: 15px;
+    font-weight: 600;
+    color: var(--accent-color);
+    background: var(--category-bg);
+    padding: 8px 12px;
+    border-radius: 8px;
+    margin-bottom: 4px;
+}
+
+/* ===== МОБИЛЬНЫЕ ===== */
+@media (max-width: 600px) {
+    .period-selectors {
+        flex-direction: column;
+        gap: 8px;
+    }
+
+    .period-group {
+        min-width: 100%;
+    }
+
+    .period-apply-btn {
+        width: 100%;
+    }
+
+    .add-limit-form {
+        flex-direction: column;
+        gap: 8px;
+    }
+
+    .add-limit-field {
+        min-width: 100%;
+    }
+
+    .add-limit-btn {
+        width: 100%;
+    }
+
+    .limit-header {
+        flex-wrap: wrap;
+    }
+}
+
+/* ===== ПК ===== */
+@media (min-width: 768px) {
+    .limits-list {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 12px;
+    }
+
+    .limits-empty,
+    .limits-loading {
+        grid-column: 1 / -1;
+    }
+}
+
+@media (min-width: 1100px) {
+    .limits-list {
+        grid-template-columns: 1fr 1fr 1fr;
+    }
+}

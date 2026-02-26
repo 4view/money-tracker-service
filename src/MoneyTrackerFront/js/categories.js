@@ -36,7 +36,7 @@ async function fetchWithAuth(url, options = {}) {
     const token = localStorage.getItem('token');
 
     if (!token) {
-        alert('Сессия истекла. Пожалуйста, войдите снова.');
+        showToast('Сессия истекла. Войдите снова.', 'error');
         window.location.href = 'login.html';
         return null;
     }
@@ -52,7 +52,7 @@ async function fetchWithAuth(url, options = {}) {
         });
 
         if (response.status === 401) {
-            alert('Сессия истекла. Пожалуйста, войдите снова.');
+            showToast('Сессия истекла. Войдите снова.', 'error');
             localStorage.removeItem('token');
             localStorage.removeItem('user');
             window.location.href = 'login.html';
@@ -126,7 +126,7 @@ async function addCategory() {
     const name = nameInput.value.trim();
 
     if (!name) {
-        alert('Введите название категории');
+        showToast('Введите название категории', 'warning');
         return;
     }
 
@@ -150,20 +150,20 @@ async function addCategory() {
         if (!response) return;
 
         if (response.ok) {
-            alert('Категория добавлена');
+            showToast('Категория добавлена', 'success');
             nameInput.value = '';
             await loadCategories();
         } else {
             try {
                 const errorData = await response.json();
-                alert(errorData.message || 'Ошибка при добавлении категории');
+                showToast(errorData.message || 'Ошибка при добавлении категории', 'error');
             } catch (e) {
-                alert(`Ошибка ${response.status}: ${response.statusText}`);
+                showToast(`Ошибка ${response.status}: ${response.statusText}`, 'error');
             }
         }
     } catch (error) {
         console.error('Ошибка:', error);
-        alert('Ошибка соединения с сервером');
+        showToast('Ошибка соединения с сервером', 'error');
     } finally {
         addBtn.textContent = originalText;
         addBtn.disabled = false;
@@ -199,7 +199,7 @@ async function saveCategoryEdit() {
     const name = document.getElementById('edit-category-name')?.value.trim();
 
     if (!id || !name) {
-        alert('Введите название категории');
+        showToast('Введите название категории', 'warning');
         return;
     }
 
@@ -219,19 +219,19 @@ async function saveCategoryEdit() {
         if (!response) return;
 
         if (response.ok) {
-            alert('Категория обновлена');
+            showToast('Категория обновлена', 'success');
             const modal = document.getElementById('edit-category-modal');
             if (modal) modal.style.display = 'none';
             await loadCategories();
         } else if (response.status === 409) {
             const error = await response.json();
-            alert(error.message || 'Такая категория уже существует');
+            showToast(error.message || 'Такая категория уже существует', 'warning');
         } else {
-            alert('Ошибка при обновлении категории');
+            showToast('Ошибка при обновлении категории', 'error');
         }
     } catch (error) {
         console.error('Ошибка:', error);
-        alert('Ошибка соединения');
+        showToast('Ошибка соединения', 'error');
     } finally {
         saveBtn.textContent = originalText;
         saveBtn.disabled = false;
@@ -271,19 +271,19 @@ async function confirmCategoryDelete() {
         if (!response) return;
 
         if (response.ok) {
-            alert('Категория удалена');
+            showToast('Категория удалена', 'success');
             const modal = document.getElementById('delete-category-modal');
             if (modal) modal.style.display = 'none';
             await loadCategories();
         } else if (response.status === 400) {
             const error = await response.json();
-            alert(error.message || 'Нельзя удалить категорию, в которой есть траты');
+            showToast(error.message || 'Нельзя удалить категорию, в которой есть траты', 'error');
         } else {
-            alert('Ошибка при удалении категории');
+            showToast('Ошибка при удалении категории', 'error');
         }
     } catch (error) {
         console.error('Ошибка:', error);
-        alert('Ошибка соединения');
+        showToast('Ошибка соединения', 'error');
     } finally {
         deleteBtn.textContent = originalText;
         deleteBtn.disabled = false;
