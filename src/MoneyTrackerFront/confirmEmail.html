@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="ru">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Подтверждение email — MoneyTracker</title>
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="css/auth.css">
+</head>
+
+<body>
+    <div class="auth-wrapper">
+        <div class="auth-card">
+            <div class="auth-logo">💰</div>
+            <h1 class="auth-title">MoneyTracker</h1>
+
+            <!-- Состояние: загрузка -->
+            <div id="state-loading">
+                <div class="auth-spinner"></div>
+                <p class="auth-subtitle">Подтверждаем ваш email...</p>
+            </div>
+
+            <!-- Состояние: успех -->
+            <div id="state-success" class="hidden">
+                <div class="auth-icon success">✓</div>
+                <h2 class="auth-heading">Email подтверждён!</h2>
+                <p class="auth-subtitle">Теперь вы можете войти в приложение.</p>
+                <a href="login.html" class="auth-btn">Войти</a>
+            </div>
+
+            <!-- Состояние: ошибка -->
+            <div id="state-error" class="hidden">
+                <div class="auth-icon error">✕</div>
+                <h2 class="auth-heading">Ссылка недействительна</h2>
+                <p class="auth-subtitle" id="error-message">Ссылка устарела или уже была использована.</p>
+                <button class="auth-btn secondary" id="resend-btn">Отправить новое письмо</button>
+                <a href="login.html" class="auth-link">Вернуться к входу</a>
+            </div>
+        </div>
+    </div>
+
+    <script src="js/theme.js"></script>
+    <script>
+        const API_BASE_URL = 'http://localhost:5183/api';
+
+        async function confirmEmail() {
+            const params = new URLSearchParams(window.location.search);
+            const token = params.get('token');
+
+            if (!token) {
+                showError('Токен подтверждения отсутствует.');
+                return;
+            }
+
+            try {
+                const response = await fetch(`${API_BASE_URL}/auth/confirm-email?token=${token}`, {
+                    method: 'POST',
+                });
+
+                if (response.ok) {
+                    showSuccess();
+                } else {
+                    const data = await response.json().catch(() => ({}));
+                    showError(data.message || 'Ссылка недействительна или устарела.');
+                }
+            } catch {
+                showError('Ошибка соединения с сервером.');
+            }
+        }
+
+        function showSuccess() {
+            document.getElementById('state-loading').classList.add('hidden');
+            document.getElementById('state-success').classList.remove('hidden');
+        }
+
+        function showError(message) {
+            document.getElementById('state-loading').classList.add('hidden');
+            document.getElementById('error-message').textContent = message;
+            document.getElementById('state-error').classList.remove('hidden');
+        }
+
+        document.getElementById('resend-btn').addEventListener('click', () => {
+            window.location.href = 'resend-confirmation.html';
+        });
+
+        confirmEmail();
+    </script>
+</body>
+
+</html>

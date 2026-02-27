@@ -19,6 +19,21 @@ public class UserRepository : IUserRepository
         return await _db.Set<UserEntity>().FirstOrDefaultAsync(u => u.Email == email, ct);
     }
 
+    public async Task<UserEntity?> GetByEmailConfirmationTokenAsync(
+        string token,
+        CancellationToken ct
+    )
+    {
+        return await _db.Set<UserEntity>()
+            .FirstOrDefaultAsync(u => u.EmailConfirmationToken == token, ct);
+    }
+
+    public async Task<UserEntity?> GetByPasswordResetTokenAsync(string token, CancellationToken ct)
+    {
+        return await _db.Set<UserEntity>()
+            .FirstOrDefaultAsync(u => u.PasswordResetToken == token, ct);
+    }
+
     public async Task<bool> EmailExistsAsync(string email, CancellationToken ct)
     {
         return await _db.Set<UserEntity>().AnyAsync(u => u.Email == email, ct);

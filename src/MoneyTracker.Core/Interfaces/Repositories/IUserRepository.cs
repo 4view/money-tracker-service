@@ -6,6 +6,10 @@ public interface IUserRepository
 
     Task<UserEntity?> GetByEmailAsync(string email, CancellationToken ct);
 
+    Task<UserEntity?> GetByEmailConfirmationTokenAsync(string token, CancellationToken ct);
+
+    Task<UserEntity?> GetByPasswordResetTokenAsync(string token, CancellationToken ct);
+
     Task<bool> EmailExistsAsync(string email, CancellationToken ct);
 
     Task<bool> UsernameExistsAsync(string username, CancellationToken ct);

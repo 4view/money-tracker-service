@@ -36,7 +36,7 @@ async function fetchWithAuth(url, options = {}) {
     const token = localStorage.getItem('token');
 
     if (!token) {
-        showToast('Сессия истекла. Войдите снова.', 'error');
+        alert('Сессия истекла. Пожалуйста, войдите снова.');
         window.location.href = 'login.html';
         return null;
     }
@@ -52,7 +52,7 @@ async function fetchWithAuth(url, options = {}) {
         });
 
         if (response.status === 401) {
-            showToast('Сессия истекла. Войдите снова.', 'error');
+            alert('Сессия истекла. Пожалуйста, войдите снова.');
             localStorage.removeItem('token');
             localStorage.removeItem('user');
             window.location.href = 'login.html';
@@ -331,7 +331,7 @@ async function saveExpenseEdit() {
     const categoryId = document.getElementById('edit-expense-category')?.value;
 
     if (!id || !dateStr || isNaN(sum) || sum <= 0 || !categoryId) {
-        showToast('Заполните все поля', 'warning');
+        alert('Пожалуйста, заполните все поля');
         return;
     }
 
@@ -349,16 +349,16 @@ async function saveExpenseEdit() {
         });
 
         if (response && response.ok) {
-            showToast('Трата обновлена', 'success');
+            alert('Трата обновлена');
             const modal = document.getElementById('edit-expense-modal');
             if (modal) modal.style.display = 'none';
             await loadExpenses(); // Перезагружаем список
         } else {
-            showToast('Ошибка при обновлении', 'error');
+            alert('Ошибка при обновлении');
         }
     } catch (error) {
         console.error('Ошибка:', error);
-        showToast('Ошибка соединения', 'error');
+        alert('Ошибка соединения');
     }
 }
 
@@ -377,21 +377,75 @@ async function confirmDelete() {
         });
 
         if (response && response.ok) {
-            showToast('Трата удалена', 'success');
+            alert('Трата удалена');
             const deleteModal = document.getElementById('delete-modal');
             if (deleteModal) deleteModal.style.display = 'none';
             await loadExpenses(); // Перезагружаем список
         } else {
-            showToast('Ошибка при удалении', 'error');
+            alert('Ошибка при удалении');
         }
     } catch (error) {
         console.error('Ошибка:', error);
-        showToast('Ошибка соединения', 'error');
+        alert('Ошибка соединения');
     }
+}
+
+// Экспорт отфильтрованных трат в CSV
+function exportToCsv() {
+    if (filteredExpenses.length === 0) {
+        showToast('Нет трат для экспорта', 'warning');
+        return;
+    }
+
+    // Заголовок таблицы
+    const header = ['Дата', 'Сумма (₽)', 'Категория', 'Описание'];
+
+    // Строки с данными
+    const rows = filteredExpenses.map(expense => {
+        const date = new Date(expense.time).toLocaleString('ru-RU', {
+            day: '2-digit',
+            month: '2-digit',
+            year: 'numeric',
+            hour: '2-digit',
+            minute: '2-digit',
+        }).replace(',', '');
+
+        const sum = expense.sum.toFixed(2);
+
+        const category = categories.find(c => String(c.id) === String(expense.categoryId));
+        const categoryName = category ? category.name : 'Другое';
+
+        // Оборачиваем в кавычки — защита от запятых внутри текста
+        const description = `"${(expense.description || '').replace(/"/g, '""')}"`;
+
+        return [date, sum, categoryName, description].join(',');
+    });
+
+    // BOM-маркер \uFEFF нужен чтобы Excel правильно открыл кириллицу
+    const csvContent = '\uFEFF' + [header.join(','), ...rows].join('\n');
+
+    // Создаём файл в памяти и скачиваем
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = `траты_${new Date().toLocaleDateString('ru-RU').replace(/\./g, '-')}.csv`;
+    link.click();
+
+    URL.revokeObjectURL(url); // освобождаем память
+
+    showToast(`Экспортировано ${filteredExpenses.length} трат`, 'success');
 }
 
 // Инициализация обработчиков
 function initializeEventListeners() {
+    // Экспорт в CSV
+    const exportBtn = document.getElementById('export-csv');
+    if (exportBtn) {
+        exportBtn.addEventListener('click', exportToCsv);
+    }
+
     // Применить фильтры
     const applyBtn = document.getElementById('apply-filters');
     if (applyBtn) {

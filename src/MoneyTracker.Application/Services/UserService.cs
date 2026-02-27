@@ -1,13 +1,26 @@
+using System.IdentityModel.Tokens.Jwt;
+using System.Security.Claims;
+using System.Security.Cryptography;
+using System.Text;
+using Microsoft.Extensions.Configuration;
+using Microsoft.IdentityModel.Tokens;
+
 namespace MoneyTracker.Application.Services;
 
 public class UserService : IUserService
 {
     private readonly IUserRepository _userRepo;
+    private readonly IEmailService _emailService;
     private readonly IConfiguration _configuration;
 
-    public UserService(IUserRepository userRepo, IConfiguration configuration)
+    public UserService(
+        IUserRepository userRepo,
+        IEmailService emailService,
+        IConfiguration configuration
+    )
     {
         _userRepo = userRepo;
+        _emailService = emailService;
         _configuration = configuration;
     }
 
@@ -40,6 +53,8 @@ public class UserService : IUserService
                 $"Пользователь с именем '{dto.UserName}' уже существует"
             );
 
+        var confirmationToken = GenerateSecureToken();
+
         var user = new UserEntity
         {
             Id = Guid.NewGuid(),
@@ -47,9 +62,21 @@ public class UserService : IUserService
             UserName = dto.UserName,
             PasswordHash = HashPassword(dto.Password),
             CreatedAt = DateTime.UtcNow,
+            IsEmailConfirmed = false,
+            EmailConfirmationToken = confirmationToken,
+            EmailConfirmationTokenExpiry = DateTime.UtcNow.AddHours(24),
         };
 
         await _userRepo.AddAsync(user, ct);
+
+        var frontendUrl = _configuration["Frontend:Url"] ?? "http://localhost:5500";
+        var confirmationLink = $"{frontendUrl}/confirm-email.html?token={confirmationToken}";
+        await _emailService.SendEmailConfirmationAsync(
+            user.Email,
+            user.UserName,
+            confirmationLink,
+            ct
+        );
 
         return BuildAuthResponse(user);
     }
@@ -61,7 +88,12 @@ public class UserService : IUserService
         if (user == null || !VerifyPassword(dto.Password, user.PasswordHash))
             throw new ResponseException(ErrorType.Validation, "Неверный email или пароль!");
 
-        // Прозрачная миграция SHA-256 → BCrypt при входе
+        if (!user.IsEmailConfirmed)
+            throw new ResponseException(
+                ErrorType.Validation,
+                "Email не подтверждён. Проверьте почту."
+            );
+
         if (IsLegacySha256Hash(user.PasswordHash))
         {
             user.PasswordHash = HashPassword(dto.Password);
@@ -71,7 +103,93 @@ public class UserService : IUserService
         return BuildAuthResponse(user);
     }
 
-    // ─── Приватные вспомогательные ───────────────────────────────────────────
+    public async Task SendEmailConfirmationAsync(string email, CancellationToken ct)
+    {
+        var user = await _userRepo.GetByEmailAsync(email, ct);
+        if (user == null || user.IsEmailConfirmed)
+            return;
+
+        user.EmailConfirmationToken = GenerateSecureToken();
+        user.EmailConfirmationTokenExpiry = DateTime.UtcNow.AddHours(24);
+        await _userRepo.UpdateAsync(user, ct);
+
+        var frontendUrl = _configuration["Frontend:Url"] ?? "http://localhost:5500";
+        var confirmationLink =
+            $"{frontendUrl}/confirm-email.html?token={user.EmailConfirmationToken}";
+        await _emailService.SendEmailConfirmationAsync(
+            user.Email,
+            user.UserName,
+            confirmationLink,
+            ct
+        );
+    }
+
+    public async Task ConfirmEmailAsync(string token, CancellationToken ct)
+    {
+        var user =
+            await _userRepo.GetByEmailConfirmationTokenAsync(token, ct)
+            ?? throw new ResponseException(
+                ErrorType.NotFound,
+                "Неверная или устаревшая ссылка подтверждения"
+            );
+
+        if (user.EmailConfirmationTokenExpiry < DateTime.UtcNow)
+            throw new ResponseException(
+                ErrorType.Validation,
+                "Ссылка подтверждения устарела. Запросите новую."
+            );
+
+        user.IsEmailConfirmed = true;
+        user.EmailConfirmationToken = null;
+        user.EmailConfirmationTokenExpiry = null;
+        await _userRepo.UpdateAsync(user, ct);
+    }
+
+    public async Task ForgotPasswordAsync(string email, CancellationToken ct)
+    {
+        var user = await _userRepo.GetByEmailAsync(email, ct);
+        if (user == null)
+            return;
+
+        user.PasswordResetToken = GenerateSecureToken();
+        user.PasswordResetTokenExpiry = DateTime.UtcNow.AddHours(1);
+        await _userRepo.UpdateAsync(user, ct);
+
+        var frontendUrl = _configuration["Frontend:Url"] ?? "http://localhost:5500";
+        var resetLink = $"{frontendUrl}/reset-password.html?token={user.PasswordResetToken}";
+        await _emailService.SendPasswordResetAsync(user.Email, user.UserName, resetLink, ct);
+    }
+
+    public async Task ResetPasswordAsync(string token, string newPassword, CancellationToken ct)
+    {
+        if (string.IsNullOrWhiteSpace(newPassword) || newPassword.Length < 6)
+            throw new ResponseException(
+                ErrorType.Validation,
+                "Пароль должен содержать минимум 6 символов"
+            );
+
+        var user =
+            await _userRepo.GetByPasswordResetTokenAsync(token, ct)
+            ?? throw new ResponseException(
+                ErrorType.NotFound,
+                "Неверная или устаревшая ссылка сброса пароля"
+            );
+
+        if (user.PasswordResetTokenExpiry < DateTime.UtcNow)
+            throw new ResponseException(
+                ErrorType.Validation,
+                "Ссылка сброса устарела. Запросите новую."
+            );
+
+        user.PasswordHash = HashPassword(newPassword);
+        user.PasswordResetToken = null;
+        user.PasswordResetTokenExpiry = null;
+        user.UpdatedAt = DateTime.UtcNow;
+        await _userRepo.UpdateAsync(user, ct);
+    }
+
+    private static string GenerateSecureToken() =>
+        Convert.ToHexString(RandomNumberGenerator.GetBytes(32)).ToLower();
 
     private static bool IsLegacySha256Hash(string hash) => !hash.StartsWith("$2");
 
@@ -79,13 +197,11 @@ public class UserService : IUserService
     {
         if (IsLegacySha256Hash(hash))
             return HashSha256(password) == hash;
-
         return BCrypt.Net.BCrypt.Verify(password, hash);
     }
 
     private static string HashPassword(string password) => BCrypt.Net.BCrypt.HashPassword(password);
 
-    /// <summary>Только для проверки старых хешей при миграции.</summary>
     private static string HashSha256(string password)
     {
         using var sha256 = SHA256.Create();
@@ -93,9 +209,8 @@ public class UserService : IUserService
         return Convert.ToBase64String(bytes);
     }
 
-    private AuthResponseDto BuildAuthResponse(UserEntity user)
-    {
-        return new AuthResponseDto
+    private AuthResponseDto BuildAuthResponse(UserEntity user) =>
+        new()
         {
             UserId = user.Id,
             UserName = user.UserName,
@@ -103,22 +218,17 @@ public class UserService : IUserService
             Token = GenerateJwtToken(user),
             ExpiresAt = DateTime.UtcNow.AddDays(7),
         };
-    }
 
     private string GenerateJwtToken(UserEntity user)
     {
         var jwtKey =
-            _configuration["Jwt:Key"]
-            ?? throw new InvalidOperationException(
-                "JWT ключ не задан. Добавьте 'Jwt:Key' в appsettings.json."
-            );
+            _configuration["Jwt:Key"] ?? throw new InvalidOperationException("JWT ключ не задан.");
 
         if (jwtKey.Length < 32)
             throw new InvalidOperationException("JWT ключ слишком короткий. Минимум 32 символа.");
 
         var key = Encoding.UTF8.GetBytes(jwtKey);
         var tokenHandler = new JwtSecurityTokenHandler();
-
         var tokenDescriptor = new SecurityTokenDescriptor
         {
             Subject = new ClaimsIdentity(
@@ -134,7 +244,6 @@ public class UserService : IUserService
                 SecurityAlgorithms.HmacSha256Signature
             ),
         };
-
         return tokenHandler.WriteToken(tokenHandler.CreateToken(tokenDescriptor));
     }
 }

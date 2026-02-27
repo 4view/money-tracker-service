@@ -98,66 +98,54 @@
 .expenses-list {
     background: var(--card-bg);
     border-radius: 16px;
-    padding: 12px;
+    padding: 16px;
     margin-bottom: 20px;
     box-shadow: 0 2px 8px var(--shadow-color);
 }
 
-/* ===== ЕДИНАЯ КАРТОЧКА ТРАТЫ ===== */
+/* Элемент траты - УПОРЯДОЧЕННЫЙ */
 .expense-item {
     background: var(--expense-bg);
-    border-radius: 10px;
-    padding: 12px 14px;
-    margin-bottom: 8px;
-    border-left: 3px solid var(--accent-color);
-    transition: box-shadow 0.2s;
+    border-radius: 14px;
+    padding: 16px;
+    margin-bottom: 12px;
+    border-left: 4px solid var(--accent-color);
+    transition: transform 0.2s;
 }
 
 .expense-item:last-child {
     margin-bottom: 0;
 }
 
-.expense-item:hover {
-    box-shadow: 0 2px 10px var(--shadow-color);
-}
-
-/* Верхний ряд: дата + сумма + кнопки */
+/* Верхний ряд: дата и действия */
 .expense-header {
     display: flex;
+    justify-content: space-between;
     align-items: center;
-    gap: 8px;
-    margin-bottom: 6px;
+    margin-bottom: 12px;
 }
 
 .expense-date {
-    font-size: 12px;
+    font-size: 13px;
     color: var(--text-secondary);
-    font-weight: 500;
-    flex-shrink: 0;
-}
-
-.expense-sum {
-    font-size: 15px;
-    font-weight: 700;
-    color: var(--success-color);
-    margin-left: auto;
-    white-space: nowrap;
+    background: var(--card-bg);
+    padding: 4px 10px;
+    border-radius: 20px;
 }
 
 .expense-actions {
     display: flex;
-    gap: 4px;
-    flex-shrink: 0;
+    gap: 6px;
 }
 
 .expense-actions button {
-    background: transparent;
+    background: var(--card-bg);
     border: none;
-    font-size: 12px;
-    padding: 3px 8px;
-    border-radius: 6px;
+    font-size: 14px;
+    padding: 4px 10px;
+    border-radius: 20px;
     cursor: pointer;
-    transition: all 0.15s;
+    transition: all 0.2s;
     font-weight: 500;
 }
 
@@ -169,45 +157,49 @@
     color: var(--danger-color);
 }
 
-.expense-actions .edit:hover {
-    background: var(--accent-color);
-    color: white;
-}
-
-.expense-actions .delete:hover {
-    background: var(--danger-color);
-    color: white;
-}
-
 .expense-actions button:active {
     opacity: 0.7;
     transform: scale(0.95);
 }
 
-/* Нижний ряд: категория + описание */
+/* Средний ряд: категория и цена */
 .expense-info {
     display: flex;
+    justify-content: space-between;
     align-items: center;
-    gap: 8px;
+    margin-bottom: 12px;
     flex-wrap: wrap;
+    gap: 10px;
 }
 
 .expense-category {
-    font-size: 12px;
+    font-size: 16px;
     font-weight: 600;
     color: var(--accent-color);
     background: var(--category-bg);
-    padding: 3px 10px;
-    border-radius: 20px;
-    white-space: nowrap;
-    flex-shrink: 0;
+    padding: 6px 14px;
+    border-radius: 30px;
+    display: inline-block;
 }
 
+.expense-sum {
+    font-size: 20px;
+    font-weight: 700;
+    color: var(--success-color);
+    background: rgba(40, 167, 69, 0.1);
+    padding: 6px 16px;
+    border-radius: 30px;
+    white-space: nowrap;
+}
+
+/* Нижний ряд: описание */
 .expense-description {
-    font-size: 13px;
-    color: var(--text-secondary);
+    font-size: 14px;
+    color: var(--text-primary);
+    background: var(--card-bg);
+    padding: 12px;
+    border-radius: 10px;
     word-break: break-word;
-    line-height: 1.4;
 }
 
 .expense-description:empty {
@@ -290,6 +282,46 @@
         font-size: 18px;
     }
 
+    .expense-item {
+        padding: 14px;
+    }
+
+    .expense-header {
+        margin-bottom: 10px;
+    }
+
+    .expense-date {
+        font-size: 12px;
+    }
+
+    .expense-actions button {
+        font-size: 13px;
+        padding: 4px 8px;
+    }
+
+    .expense-info {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 8px;
+    }
+
+    .expense-category {
+        font-size: 15px;
+        width: 100%;
+        text-align: center;
+    }
+
+    .expense-sum {
+        font-size: 18px;
+        width: 100%;
+        text-align: center;
+    }
+
+    .expense-description {
+        font-size: 13px;
+        padding: 10px;
+    }
+
     .pagination {
         gap: 8px;
     }
@@ -327,9 +359,83 @@
     }
 }
 
-/* ПК ВЕРСИЯ - единый стиль */
+/* ПК ВЕРСИЯ */
 @media (min-width: 768px) {
     .expense-item {
-        padding: 12px 16px;
+        display: grid;
+        grid-template-columns: 1fr auto;
+        gap: 16px;
+        align-items: start;
     }
+
+    .expense-header {
+        grid-column: 1;
+        margin-bottom: 0;
+    }
+
+    .expense-info {
+        grid-column: 1;
+        margin-bottom: 0;
+    }
+
+    .expense-actions {
+        grid-column: 2;
+        grid-row: 1 / span 3;
+        flex-direction: column;
+        gap: 8px;
+        min-width: 100px;
+    }
+
+    .expense-actions button {
+        width: 100%;
+        text-align: center;
+        padding: 8px 12px;
+        border-radius: 30px;
+    }
+
+    .expense-actions .edit:hover {
+        background: var(--accent-color);
+        color: white;
+    }
+
+    .expense-actions .delete:hover {
+        background: var(--danger-color);
+        color: white;
+    }
+}
+
+/* БОЛЬШИЕ ЭКРАНЫ */
+@media (min-width: 1024px) {
+    .expense-item {
+        grid-template-columns: 1fr 150px;
+    }
+
+    .expense-actions {
+        min-width: 120px;
+    }
+}
+
+/* ===== КНОПКА ЭКСПОРТА ===== */
+.export-row {
+    display: flex;
+    justify-content: flex-end;
+    margin-bottom: 10px;
+}
+
+.export-btn {
+    padding: 8px 16px;
+    background: transparent;
+    color: var(--text-secondary);
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    font-size: 13px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.export-btn:hover {
+    background: var(--accent-color);
+    color: white;
+    border-color: var(--accent-color);
 }
