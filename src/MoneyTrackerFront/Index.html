@@ -20,7 +20,7 @@
                 <div class="nav-links">
                     <a href="expenses.html" class="nav-link">Все траты</a>
                     <a href="categories.html" class="nav-link">Категории</a>
-                    <a href="limits.html" class="nav-link">Лимиты</a>
+                    <a href="Limits.html" class="nav-link">Лимиты</a>
                 </div>
                 <div class="user-info" id="user-info">
                     <button class="theme-toggle" id="theme-toggle">🌙</button>
@@ -36,10 +36,15 @@
             <span id="camera-status-text">✅ Камера доступна</span>
         </div>
 
-        <!-- Кнопка запуска сканера -->
-        <button class="scan-btn" id="start-scan">
-            Начать сканирование
-        </button>
+        <!-- Кнопки действий -->
+        <div class="action-btns-row">
+            <button class="scan-btn" id="start-scan">
+                Сканировать чек
+            </button>
+            <button class="manual-btn" id="add-manual-btn">
+                + Добавить трату
+            </button>
+        </div>
 
         <!-- Контейнер сканера (изначально скрыт) -->
         <div class="scanner-wrapper hidden" id="scanner-wrapper">
@@ -69,6 +74,45 @@
             </div>
         </div>
 
+        <!-- Дашборд статистики -->
+        <div class="dashboard" id="dashboard">
+            <!-- Сводка за текущий месяц -->
+            <div class="dash-summary" id="dash-summary">
+                <div class="dash-summary-card">
+                    <span class="dash-summary-label">Потрачено в этом месяце</span>
+                    <span class="dash-summary-value" id="dash-total">...</span>
+                </div>
+                <div class="dash-summary-card">
+                    <span class="dash-summary-label">Трат за месяц</span>
+                    <span class="dash-summary-value" id="dash-count">...</span>
+                </div>
+                <div class="dash-summary-card">
+                    <span class="dash-summary-label">Средняя трата</span>
+                    <span class="dash-summary-value" id="dash-avg">...</span>
+                </div>
+            </div>
+
+            <!-- График по дням -->
+            <div class="dash-card">
+                <div class="dash-card-header">
+                    <span class="dash-card-title">Траты по дням</span>
+                    <span class="dash-card-subtitle" id="dash-chart-period"></span>
+                </div>
+                <div class="dash-chart-wrap">
+                    <svg id="dash-chart" class="dash-chart" viewBox="0 0 300 80" preserveAspectRatio="none"></svg>
+                    <div class="dash-chart-labels" id="dash-chart-labels"></div>
+                </div>
+            </div>
+
+            <!-- Топ категорий -->
+            <div class="dash-card">
+                <div class="dash-card-header">
+                    <span class="dash-card-title">Топ категорий</span>
+                </div>
+                <div id="dash-categories"></div>
+            </div>
+        </div>
+
         <!-- Последние сканирования -->
         <div class="last-scans">
             <h3>Последние сканирования</h3>
@@ -95,6 +139,7 @@
     </div>
 
     <!-- Подключение JavaScript -->
+    <script src="js/toast.js"></script>
     <script src="js/theme.js"></script>
     <script src="js/auth-check.js"></script>
     <script src="js/app.js"></script>

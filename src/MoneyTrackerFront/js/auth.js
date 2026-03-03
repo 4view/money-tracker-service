@@ -21,33 +21,26 @@ if (registerForm) {
             password: password
         };
 
-        // Показываем состояние загрузки
         registerButton.classList.add('loading');
         registerButton.disabled = true;
 
         try {
             const response = await fetch(`${API_BASE_URL}/auth/register`, {
                 method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
+                headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(userData)
             });
 
             const data = await response.json();
 
             if (response.ok) {
-                showSuccess('Регистрация успешна! Перенаправляем...');
-                localStorage.setItem('token', data.token);
-                localStorage.setItem('user', JSON.stringify({
-                    id: data.userId,
-                    name: data.userName,
-                    email: data.email
-                }));
+                // ✅ ИСПРАВЛЕНО: не сохраняем токен и не пускаем на главную —
+                // пользователь должен сначала подтвердить email
+                showSuccess('Регистрация успешна! Проверьте почту для подтверждения.');
 
-                setTimeout(() => {
-                    window.location.href = 'index.html';
-                }, 1500);
+                // Прячем форму, показываем инструкцию
+                registerForm.style.display = 'none';
+                showEmailSentHint(userData.email);
             } else {
                 showError(data.message || 'Ошибка регистрации');
                 registerButton.classList.remove('loading');
@@ -74,16 +67,13 @@ if (loginForm) {
         };
         const loginButton = document.getElementById('login-button');
 
-        // Показываем состояние загрузки
         loginButton.classList.add('loading');
         loginButton.disabled = true;
 
         try {
             const response = await fetch(`${API_BASE_URL}/auth/login`, {
                 method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
+                headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(loginData)
             });
 
@@ -102,7 +92,14 @@ if (loginForm) {
                     window.location.href = 'index.html';
                 }, 1500);
             } else {
-                showError(data.message || 'Неверный email или пароль');
+                const message = data.message || 'Неверный email или пароль';
+                showError(message);
+
+                // Если email не подтверждён — показываем кнопку повторной отправки
+                if (message.includes('не подтверждён')) {
+                    showResendButton(document.getElementById('email').value);
+                }
+
                 loginButton.classList.remove('loading');
                 loginButton.disabled = false;
             }
@@ -113,28 +110,101 @@ if (loginForm) {
             loginButton.disabled = false;
         }
     });
+
+    // Добавляем ссылку «Забыли пароль?» под кнопкой входа
+    const forgotLink = document.createElement('div');
+    forgotLink.className = 'auth-switch';
+    forgotLink.style.marginTop = '12px';
+    forgotLink.innerHTML = '<a href="forgotPassword.html">Забыли пароль?</a>';
+    loginForm.after(forgotLink);
 }
 
-function showError(message) {
-    const existingError = document.querySelector('.error-message');
-    if (existingError) existingError.remove();
+// ─── Вспомогательные функции ─────────────────────────────────────────────────
 
-    const errorDiv = document.createElement('div');
-    errorDiv.className = 'error-message';
-    errorDiv.textContent = message;
+function showError(message) {
+    const existing = document.querySelector('.error-message');
+    if (existing) existing.remove();
+
+    const div = document.createElement('div');
+    div.className = 'error-message';
+    div.textContent = message;
 
     const form = document.querySelector('form');
-    form.parentNode.insertBefore(errorDiv, form);
+    form.parentNode.insertBefore(div, form);
 }
 
 function showSuccess(message) {
-    const existingSuccess = document.querySelector('.success-message');
-    if (existingSuccess) existingSuccess.remove();
+    // Убираем и ошибку, и предыдущий успех — показываем только одно сообщение
+    document.querySelector('.success-message')?.remove();
+    document.querySelector('.error-message')?.remove();
+    document.querySelector('.resend-btn')?.remove();
 
-    const successDiv = document.createElement('div');
-    successDiv.className = 'success-message';
-    successDiv.textContent = message;
+    const div = document.createElement('div');
+    div.className = 'success-message';
+    div.textContent = message;
 
     const form = document.querySelector('form');
-    form.parentNode.insertBefore(successDiv, form);
+    form.parentNode.insertBefore(div, form);
+}
+
+// Показывает подсказку после регистрации — "письмо отправлено на ..."
+function showEmailSentHint(email) {
+    const existing = document.querySelector('.email-sent-hint');
+    if (existing) existing.remove();
+
+    const div = document.createElement('div');
+    div.className = 'email-sent-hint';
+    div.innerHTML = `
+        <div style="text-align:center; padding: 16px 0;">
+            <div style="font-size: 40px; margin-bottom: 12px;">✉️</div>
+            <p style="margin-bottom: 8px; color: var(--text-primary); font-weight: 500;">
+                Письмо отправлено на<br><strong>${email}</strong>
+            </p>
+            <p style="font-size: 13px; color: var(--text-secondary); margin-bottom: 16px;">
+                Перейдите по ссылке в письме, чтобы активировать аккаунт.<br>
+                Проверьте папку «Спам», если письмо не пришло.
+            </p>
+            <a href="login.html" style="color: var(--accent-color); font-size: 14px;">
+                Перейти к входу
+            </a>
+        </div>
+    `;
+
+    const card = document.querySelector('.auth-card') || document.querySelector('form').parentNode;
+    card.appendChild(div);
+}
+
+// Показывает кнопку «Отправить письмо повторно» на странице входа
+function showResendButton(email) {
+    const existing = document.querySelector('.resend-btn');
+    if (existing) return;
+
+    const btn = document.createElement('button');
+    btn.className = 'resend-btn';
+    btn.textContent = 'Отправить письмо повторно';
+    btn.style.cssText = `
+        display: block; width: 100%; margin-top: 8px; padding: 10px;
+        background: transparent; color: var(--accent-color);
+        border: 1px solid var(--accent-color); border-radius: 8px;
+        font-size: 14px; cursor: pointer;
+    `;
+
+    btn.addEventListener('click', async () => {
+        btn.disabled = true;
+        btn.textContent = 'Отправляем...';
+
+        try {
+            await fetch(`${API_BASE_URL}/auth/resend-confirmation`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ email })
+            });
+            btn.textContent = '✓ Письмо отправлено';
+        } catch {
+            btn.textContent = 'Ошибка. Попробуйте позже.';
+        }
+    });
+
+    const errorDiv = document.querySelector('.error-message');
+    if (errorDiv) errorDiv.after(btn);
 }

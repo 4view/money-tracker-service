@@ -36,7 +36,7 @@ async function fetchWithAuth(url, options = {}) {
     const token = localStorage.getItem('token');
 
     if (!token) {
-        alert('Сессия истекла. Пожалуйста, войдите снова.');
+        showToast('Сессия истекла. Войдите снова.', 'error');
         window.location.href = 'login.html';
         return null;
     }
@@ -52,7 +52,7 @@ async function fetchWithAuth(url, options = {}) {
         });
 
         if (response.status === 401) {
-            alert('Сессия истекла. Пожалуйста, войдите снова.');
+            showToast('Сессия истекла. Войдите снова.', 'error');
             localStorage.removeItem('token');
             localStorage.removeItem('user');
             window.location.href = 'login.html';
@@ -209,13 +209,21 @@ function displayExpenses() {
         expensesList.innerHTML = '<div class="empty-state">Нет трат за выбранный период</div>';
     } else {
         expensesList.innerHTML = pageExpenses.map(expense => {
-            const date = new Date(expense.time);
-            const formattedDate = date.toLocaleString('ru-RU', {
-                day: '2-digit',
-                month: '2-digit',
-                hour: '2-digit',
-                minute: '2-digit'
+            // expense.time — дата покупки (с чека)
+            // expense.entryTime — дата занесения в систему (если есть)
+            const purchaseDate = new Date(expense.time);
+            const entryDate = expense.entryTime ? new Date(expense.entryTime) : null;
+
+            const formatDate = (d) => d.toLocaleString('ru-RU', {
+                day: '2-digit', month: '2-digit', year: 'numeric',
+                hour: '2-digit', minute: '2-digit'
             }).replace(',', '');
+
+            const purchaseDateStr = formatDate(purchaseDate);
+            const entryDateStr = entryDate ? formatDate(entryDate) : null;
+
+            // Показываем дату занесения только если она отличается от покупки (>1 мин разница)
+            const showEntryDate = entryDate && Math.abs(entryDate - purchaseDate) > 60000;
 
             const category = categories.find(c => String(c.id) === String(expense.categoryId));
             const categoryName = category ? category.name : 'Другое';
@@ -224,23 +232,28 @@ function displayExpenses() {
             return `
         <div class="expense-item" data-id="${expense.id}">
             <div class="expense-header">
-                <span class="expense-date">${formattedDate}</span>
-                <div class="expense-actions">
-                    <button class="edit" onclick="editExpense('${expense.id}')">✎ Ред.</button>
-                    <button class="delete" onclick="deleteExpense('${expense.id}')">🗑 Удал.</button>
+                <div class="expense-date-info">
+                    <div class="purchase-date">
+                        <span class="date-label">Покупка:</span> ${purchaseDateStr}
+                    </div>
+                    ${showEntryDate ? `
+                    <div class="entry-date">
+                        <span class="date-label">Занесено:</span> ${entryDateStr}
+                    </div>` : ''}
+                </div>
+                <div class="expense-actions-right">
+                    <button class="expense-action-btn edit-action" onclick="editExpense('${expense.id}')">✎ Ред.</button>
+                    <button class="expense-action-btn delete-action" onclick="deleteExpense('${expense.id}')">🗑 Удал.</button>
                 </div>
             </div>
-            
-            <div class="expense-info">
+            ${description ? `
+            <div class="scan-description">
+                <div class="description-text">${description}</div>
+            </div>` : ''}
+            <div class="expense-footer">
                 <span class="expense-category">${categoryName}</span>
-                ${description ? `
-                    <div class="expense-description">
-                        ${description}
-                    </div>
-                ` : ''}
-                <span class="expense-sum">${expense.sum.toFixed(2)} ₽</span>
+                <span class="amount">${expense.sum.toFixed(2)} ₽</span>
             </div>
-            
         </div>
     `;
         }).join('');
@@ -331,7 +344,7 @@ async function saveExpenseEdit() {
     const categoryId = document.getElementById('edit-expense-category')?.value;
 
     if (!id || !dateStr || isNaN(sum) || sum <= 0 || !categoryId) {
-        alert('Пожалуйста, заполните все поля');
+        showToast('Пожалуйста, заполните все поля', 'warning');
         return;
     }
 
@@ -349,16 +362,16 @@ async function saveExpenseEdit() {
         });
 
         if (response && response.ok) {
-            alert('Трата обновлена');
+            showToast('Трата обновлена', 'success');
             const modal = document.getElementById('edit-expense-modal');
             if (modal) modal.style.display = 'none';
             await loadExpenses(); // Перезагружаем список
         } else {
-            alert('Ошибка при обновлении');
+            showToast('Ошибка при обновлении', 'error');
         }
     } catch (error) {
         console.error('Ошибка:', error);
-        alert('Ошибка соединения');
+        showToast('Ошибка соединения', 'error');
     }
 }
 
@@ -377,16 +390,16 @@ async function confirmDelete() {
         });
 
         if (response && response.ok) {
-            alert('Трата удалена');
+            showToast('Трата удалена', 'success');
             const deleteModal = document.getElementById('delete-modal');
             if (deleteModal) deleteModal.style.display = 'none';
             await loadExpenses(); // Перезагружаем список
         } else {
-            alert('Ошибка при удалении');
+            showToast('Ошибка при удалении', 'error');
         }
     } catch (error) {
         console.error('Ошибка:', error);
-        alert('Ошибка соединения');
+        showToast('Ошибка соединения', 'error');
     }
 }
 

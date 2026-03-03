@@ -21,11 +21,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
     loadLastScans();
     checkCameraAvailability();
-    loadCategories(); // Загружаем категории
-
-    if (typeof displayStatistics === 'function') {
-        displayStatistics();
-    }
+    loadCategories(); // Загружаем категории (внутри вызывает displayStatistics)
 
     // Проверяем загрузку библиотеки
     if (typeof Html5Qrcode === 'undefined') {
@@ -134,6 +130,10 @@ async function loadCategories() {
         } else {
             console.error('Ошибка загрузки категорий:', response?.status);
         }
+
+        // Загружаем статистику после того как категории получены
+        displayStatistics();
+
     } catch (error) {
         console.error('Ошибка загрузки категорий:', error);
     }
@@ -217,6 +217,14 @@ function initializeEventListeners() {
         });
     }
 
+    // Кнопка ручного добавления траты
+    const addManualBtn = document.getElementById('add-manual-btn');
+    if (addManualBtn) {
+        addManualBtn.addEventListener('click', function () {
+            openManualExpenseForm();
+        });
+    }
+
     window.addEventListener('click', function (event) {
         const modal = document.getElementById('edit-modal');
         if (event.target === modal) {
@@ -262,9 +270,20 @@ function showEditModal(field) {
 
     if (field === 'description') {
         modalTitle.textContent = 'Редактирование описания';
+        editInput.type = 'text';
         editInput.style.display = 'block';
         editInput.value = currentQrData.Description || '';
         editInput.placeholder = 'Введите описание траты';
+        editInput.focus();
+    }
+    else if (field === 'sum') {
+        modalTitle.textContent = 'Сумма';
+        editInput.type = 'number';
+        editInput.min = '0';
+        editInput.step = '0.01';
+        editInput.style.display = 'block';
+        editInput.value = currentQrData.Sum > 0 ? currentQrData.Sum : '';
+        editInput.placeholder = 'Введите сумму в рублях';
         editInput.focus();
     }
     else if (field === 'category') {
@@ -285,8 +304,12 @@ function showEditModal(field) {
     else if (field === 'date') {
         modalTitle.textContent = 'Изменение даты занесения';
         editDate.style.display = 'block';
-        // Редактируем только дату занесения
         editDate.value = formatDateForInput(currentQrData.entryTime);
+    }
+    else if (field === 'purchaseDate') {
+        modalTitle.textContent = 'Изменение даты покупки';
+        editDate.style.display = 'block';
+        editDate.value = formatDateForInput(currentQrData.purchaseTime || Date.now());
     }
 
     modal.style.display = 'flex';
@@ -317,6 +340,12 @@ function saveEdits() {
 
     if (editField.value === 'description') {
         currentQrData.Description = editInput.value;
+        editInput.type = 'text';
+    }
+    else if (editField.value === 'sum') {
+        const val = parseFloat(editInput.value);
+        currentQrData.Sum = isNaN(val) ? 0 : val;
+        editInput.type = 'text';
     }
     else if (editField.value === 'category') {
         const selectedOption = editSelect.options[editSelect.selectedIndex];
@@ -333,14 +362,22 @@ function saveEdits() {
     }
     else if (editField.value === 'date') {
         if (editDate && editDate.value) {
-            // Меняем только дату занесения
             currentQrData.entryTime = parseDateFromInput(editDate.value);
-            console.log('Новая дата занесения:', new Date(currentQrData.entryTime).toLocaleString());
+        }
+    }
+    else if (editField.value === 'purchaseDate') {
+        if (editDate && editDate.value) {
+            currentQrData.purchaseTime = parseDateFromInput(editDate.value);
         }
     }
 
     hideEditModal();
-    displayScanResult(currentQrData);
+
+    if (currentQrData.isManual) {
+        displayManualForm(currentQrData);
+    } else {
+        displayScanResult(currentQrData);
+    }
 }
 
 function getElement(id) {
@@ -495,7 +532,7 @@ function parseReceiptQR(qrText) {
             }
 
             const savedCategory = getLastUsedCategory();
-            const categoryId   = jsonData.categoryId || (savedCategory ? savedCategory.id : null);
+            const categoryId = jsonData.categoryId || (savedCategory ? savedCategory.id : null);
             const categoryName = jsonData.category || jsonData.categoryName || (savedCategory ? savedCategory.name : null);
 
             return {
@@ -612,9 +649,9 @@ function displayScanResult(qrData) {
     }
 
     // Определяем статус заполненности
-    const hasCategory    = !!qrData.CategoryId;
+    const hasCategory = !!qrData.CategoryId;
     const hasDescription = !!(qrData.Description && qrData.Description.trim());
-    const isAutoFilled   = qrData.categoryAutoFilled && hasCategory;
+    const isAutoFilled = qrData.categoryAutoFilled && hasCategory;
 
     if (hasCategory && hasDescription) {
         status.textContent = '✓ Готово к сохранению';
@@ -626,9 +663,7 @@ function displayScanResult(qrData) {
 
     // Подсказка об автоподстановке категории
     const autoHint = isAutoFilled
-        ? `<div class="auto-category-hint">
-               ↩ Категория из прошлого сканирования
-           </div>`
+        ? `<div class="auto-category-hint">↻</div>`
         : '';
 
     details.innerHTML = `
@@ -659,8 +694,8 @@ function displayScanResult(qrData) {
             <span class="detail-value">
                 <span class="category-value-wrap">
                     ${hasCategory
-                        ? `<span class="category-chip">${categoryName}</span>`
-                        : '<span style="color: #999;">не выбрана</span>'}
+            ? `<span class="category-chip">${categoryName}</span>`
+            : '<span style="color: #999;">не выбрана</span>'}
                     ${autoHint}
                 </span>
                 <button class="edit-btn" id="edit-category">Изменить</button>
@@ -671,6 +706,108 @@ function displayScanResult(qrData) {
     document.getElementById('edit-description')?.addEventListener('click', () => showEditModal('description'));
     document.getElementById('edit-category')?.addEventListener('click', () => showEditModal('category'));
     document.getElementById('edit-date-btn')?.addEventListener('click', () => showEditModal('date'));
+}
+
+// ─── РУЧНОЙ ВВОД ТРАТЫ ───────────────────────────────────────────────────────
+
+function openManualExpenseForm() {
+    const savedCategory = getLastUsedCategory();
+    currentQrData = {
+        purchaseTime: Date.now(),
+        entryTime: Date.now(),
+        Sum: 0,
+        Description: '',
+        CategoryId: savedCategory ? savedCategory.id : null,
+        CategoryName: savedCategory ? savedCategory.name : null,
+        categoryAutoFilled: !!savedCategory,
+        isManual: true
+    };
+    displayManualForm(currentQrData);
+}
+
+function displayManualForm(data) {
+    const container = getElement('result-container');
+    const details = getElement('expense-details');
+    const status = getElement('scan-status');
+    const header = container ? container.querySelector('h2') : null;
+
+    if (!container || !details || !status) return;
+
+    container.classList.remove('hidden');
+    if (header) header.textContent = 'Ручной ввод';
+
+    const hasCategory = !!data.CategoryId;
+    const hasDescription = !!(data.Description && data.Description.trim());
+    const isAutoFilled = data.categoryAutoFilled && hasCategory;
+    const categoryName = data.CategoryName || '';
+    const autoHint = isAutoFilled
+        ? `<span class="auto-category-hint" title="Из прошлого сканирования">↻</span>`
+        : '';
+
+    if (hasCategory && hasDescription && data.Sum > 0) {
+        status.textContent = '✓ Готово к сохранению';
+        status.className = 'status success';
+    } else {
+        status.textContent = '✎ Заполните поля';
+        status.className = 'status warning';
+    }
+
+    const purchaseDateStr = new Date(data.purchaseTime).toLocaleString('ru-RU', {
+        day: '2-digit', month: '2-digit', year: 'numeric',
+        hour: '2-digit', minute: '2-digit'
+    });
+    const entryDateStr = new Date(data.entryTime).toLocaleString('ru-RU', {
+        day: '2-digit', month: '2-digit', year: 'numeric',
+        hour: '2-digit', minute: '2-digit'
+    });
+
+    details.innerHTML = `
+        <div class="detail-row editable">
+            <span class="detail-label">Дата покупки:</span>
+            <span class="detail-value">
+                ${purchaseDateStr}
+                <button class="edit-btn" id="edit-purchase-date-btn">Изменить</button>
+            </span>
+        </div>
+        <div class="detail-row editable">
+            <span class="detail-label">Дата занесения:</span>
+            <span class="detail-value">
+                ${entryDateStr}
+                <button class="edit-btn" id="edit-date-btn">Изменить</button>
+            </span>
+        </div>
+        <div class="detail-row editable">
+            <span class="detail-label">Сумма:</span>
+            <span class="detail-value">
+                ${data.Sum > 0 ? data.Sum.toFixed(2) + ' ₽' : '<span style="color:#999;">не указана</span>'}
+                <button class="edit-btn" id="edit-sum-btn">Изменить</button>
+            </span>
+        </div>
+        <div class="detail-row editable">
+            <span class="detail-label">Описание:</span>
+            <span class="detail-value">
+                ${hasDescription ? data.Description : '<span style="color:#999;">не указано</span>'}
+                <button class="edit-btn" id="edit-description">Изменить</button>
+            </span>
+        </div>
+        <div class="detail-row editable">
+            <span class="detail-label">Категория:</span>
+            <span class="detail-value">
+                <span class="category-value-wrap">
+                    ${hasCategory
+            ? `<span class="expense-category">${categoryName}</span>${autoHint}`
+            : `<span style="color:#999;">не выбрана</span>`}
+                </span>
+                <button class="edit-btn" id="edit-category">Изменить</button>
+            </span>
+        </div>
+    `;
+
+    document.getElementById('edit-purchase-date-btn')?.addEventListener('click', () => showEditModal('purchaseDate'));
+    document.getElementById('edit-date-btn')?.addEventListener('click', () => showEditModal('date'));
+    document.getElementById('edit-sum-btn')?.addEventListener('click', () => showEditModal('sum'));
+    document.getElementById('edit-description')?.addEventListener('click', () => showEditModal('description'));
+    document.getElementById('edit-category')?.addEventListener('click', () => showEditModal('category'));
 }
 
 async function resetAfterSave() {
@@ -707,6 +844,12 @@ async function saveExpense(qrData) {
     if (!qrData.CategoryId) {
         showToast('Выберите категорию', 'warning');
         showEditModal('category');
+        return;
+    }
+
+    if (!qrData.Sum || qrData.Sum <= 0) {
+        showToast('Укажите сумму расхода', 'warning');
+        showEditModal('sum');
         return;
     }
 
@@ -909,19 +1052,18 @@ function loadLastScans() {
 }
 
 async function stopScanner() {
-    if (html5QrCode && isScanning) {
+    if (html5QrCode) {
         try {
-            await html5QrCode.stop();
+            if (isScanning) await html5QrCode.stop();
             await html5QrCode.clear();
-            html5QrCode = null;
-            isScanning = false;
         } catch (error) {
             console.error('Ошибка остановки сканера:', error);
-            html5QrCode = null;
-            isScanning = false;
         }
+        html5QrCode = null;
     }
+    isScanning = false;
 
+    // Всегда восстанавливаем кнопку — даже если сканер не успел запуститься
     setElementDisplay('start-scan', 'block');
     setElementDisplay('stop-scan', 'none');
 
@@ -934,7 +1076,7 @@ async function stopScanner() {
     if (qrReader) {
         qrReader.innerHTML =
             '<div style="text-align: center; color: #666; padding: 20px;">' +
-            '<p>Нажмите "Начать сканирование" для доступа к камере</p>' +
+            '<p>Нажмите "Сканировать чек" для доступа к камере</p>' +
             '</div>';
     }
 
@@ -1097,6 +1239,202 @@ async function startScanner() {
         setElementDisplay('start-scan', 'block');
         setElementDisplay('stop-scan', 'none');
     }
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+// ДАШБОРД СТАТИСТИКИ
+// ═══════════════════════════════════════════════════════════════════════════
+
+async function displayStatistics() {
+    try {
+        const now = new Date();
+        const year = now.getFullYear();
+        const month = now.getMonth(); // 0-based
+
+        // Начало и конец текущего месяца
+        const startOfMonth = new Date(year, month, 1).getTime();
+        const endOfMonth = new Date(year, month + 1, 0, 23, 59, 59, 999).getTime();
+
+        const response = await fetchWithAuth(
+            `${API_BASE_URL}/expense?startDate=${startOfMonth}&endDate=${endOfMonth}`
+        );
+
+        const dashboard = document.getElementById('dashboard');
+        if (!dashboard) return;
+
+        if (!response || (!response.ok && response.status !== 204)) {
+            dashboard.style.display = 'none';
+            return;
+        }
+
+        let expenses = [];
+        if (response.ok) {
+            const data = await response.json();
+            expenses = Array.isArray(data) ? data : [];
+        }
+
+        // ── Сводка ──────────────────────────────────────────────────────────
+        const total = expenses.reduce((s, e) => s + e.sum, 0);
+        const count = expenses.length;
+        const avg = count > 0 ? total / count : 0;
+
+        const monthName = now.toLocaleString('ru-RU', { month: 'long', year: 'numeric' });
+        const periodEl = document.getElementById('dash-chart-period');
+        if (periodEl) periodEl.textContent = monthName.charAt(0).toUpperCase() + monthName.slice(1);
+
+        const setEl = (id, text) => {
+            const el = document.getElementById(id);
+            if (el) el.textContent = text;
+        };
+
+        setEl('dash-total', total.toLocaleString('ru-RU', { minimumFractionDigits: 0, maximumFractionDigits: 0 }) + ' ₽');
+        setEl('dash-count', count);
+        setEl('dash-avg', avg > 0 ? avg.toLocaleString('ru-RU', { minimumFractionDigits: 0, maximumFractionDigits: 0 }) + ' ₽' : '—');
+
+        // ── График по дням ───────────────────────────────────────────────────
+        renderDayChart(expenses, year, month);
+
+        // ── Топ категорий ────────────────────────────────────────────────────
+        renderCategoryTop(expenses);
+
+    } catch (error) {
+        console.error('Ошибка загрузки статистики:', error);
+    }
+}
+
+function renderDayChart(expenses, year, month) {
+    const svg = document.getElementById('dash-chart');
+    const labelsEl = document.getElementById('dash-chart-labels');
+    if (!svg || !labelsEl) return;
+
+    const daysInMonth = new Date(year, month + 1, 0).getDate();
+
+    // Суммируем траты по дням
+    const byDay = new Array(daysInMonth).fill(0);
+    expenses.forEach(e => {
+        const d = new Date(e.time);
+        if (d.getMonth() === month && d.getFullYear() === year) {
+            byDay[d.getDate() - 1] += e.sum;
+        }
+    });
+
+    const maxVal = Math.max(...byDay, 1);
+    const W = 300;
+    const H = 80;
+    const padLeft = 2;
+    const padRight = 2;
+    const padTop = 8;
+    const padBottom = 2;
+    const chartW = W - padLeft - padRight;
+    const chartH = H - padTop - padBottom;
+    const barW = chartW / daysInMonth;
+
+    // Линия тренда (polyline через центры баров)
+    const points = byDay.map((val, i) => {
+        const x = padLeft + i * barW + barW / 2;
+        const y = padTop + chartH - (val / maxVal) * chartH;
+        return `${x.toFixed(1)},${y.toFixed(1)}`;
+    }).join(' ');
+
+    // Зона под линией
+    const firstX = (padLeft + barW / 2).toFixed(1);
+    const lastX = (padLeft + (daysInMonth - 1) * barW + barW / 2).toFixed(1);
+    const bottomY = (padTop + chartH).toFixed(1);
+
+    const areaPoints = `${firstX},${bottomY} ${points} ${lastX},${bottomY}`;
+
+    // Сегодняшний день — выделяем
+    const today = new Date();
+    const todayIdx = (today.getMonth() === month && today.getFullYear() === year)
+        ? today.getDate() - 1 : -1;
+
+    // Рисуем бары
+    const bars = byDay.map((val, i) => {
+        const x = padLeft + i * barW;
+        const barH = val > 0 ? Math.max((val / maxVal) * chartH, 2) : 0;
+        const y = padTop + chartH - barH;
+        const isToday = i === todayIdx;
+        const opacity = val > 0 ? (isToday ? '1' : '0.35') : '0';
+        return `<rect x="${x.toFixed(1)}" y="${y.toFixed(1)}" width="${(barW - 0.5).toFixed(1)}" height="${barH.toFixed(1)}" rx="1" fill="var(--accent-color)" opacity="${opacity}"/>`;
+    }).join('');
+
+    svg.innerHTML = `
+        <defs>
+            <linearGradient id="areaGrad" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="0%" stop-color="var(--accent-color)" stop-opacity="0.25"/>
+                <stop offset="100%" stop-color="var(--accent-color)" stop-opacity="0"/>
+            </linearGradient>
+        </defs>
+        ${bars}
+        <polygon points="${areaPoints}" fill="url(#areaGrad)"/>
+        <polyline points="${points}" fill="none" stroke="var(--accent-color)" stroke-width="1.5" stroke-linejoin="round" stroke-linecap="round"/>
+        ${todayIdx >= 0 ? (() => {
+            const cx = padLeft + todayIdx * barW + barW / 2;
+            const cy = padTop + chartH - (byDay[todayIdx] / maxVal) * chartH;
+            return `<circle cx="${cx.toFixed(1)}" cy="${cy.toFixed(1)}" r="3" fill="var(--accent-color)" stroke="var(--card-bg)" stroke-width="1.5"/>`;
+        })() : ''}
+    `;
+
+    // Метки дней под графиком (показываем каждые ~5 дней)
+    labelsEl.innerHTML = '';
+    labelsEl.style.display = 'flex';
+    labelsEl.style.justifyContent = 'space-between';
+    labelsEl.style.padding = '2px 2px 0';
+
+    const step = daysInMonth <= 15 ? 2 : 5;
+    for (let i = 0; i < daysInMonth; i += step) {
+        const span = document.createElement('span');
+        span.textContent = i + 1;
+        span.style.cssText = `font-size:10px; color:var(--text-tertiary); flex:${step}; text-align:center;`;
+        if (i === todayIdx || (todayIdx >= i && todayIdx < i + step)) {
+            span.style.color = 'var(--accent-color)';
+            span.style.fontWeight = '700';
+        }
+        labelsEl.appendChild(span);
+    }
+}
+
+function renderCategoryTop(expenses) {
+    const container = document.getElementById('dash-categories');
+    if (!container) return;
+
+    if (expenses.length === 0) {
+        container.innerHTML = '<div class="dash-empty">Нет трат за этот месяц</div>';
+        return;
+    }
+
+    // Группируем по категориям
+    const catMap = {};
+    expenses.forEach(e => {
+        const cat = categories.find(c => String(c.id) === String(e.categoryId));
+        const name = cat ? cat.name : 'Другое';
+        if (!catMap[name]) catMap[name] = 0;
+        catMap[name] += e.sum;
+    });
+
+    const total = expenses.reduce((s, e) => s + e.sum, 0);
+    const sorted = Object.entries(catMap).sort((a, b) => b[1] - a[1]).slice(0, 5);
+    const maxCat = sorted[0]?.[1] || 1;
+
+    container.innerHTML = sorted.map(([name, sum]) => {
+        const pct = Math.round((sum / total) * 100);
+        const barPct = Math.round((sum / maxCat) * 100);
+        const sumStr = sum.toLocaleString('ru-RU', { minimumFractionDigits: 0, maximumFractionDigits: 0 });
+        return `
+            <div class="dash-cat-row">
+                <div class="dash-cat-header">
+                    <span class="dash-cat-name">${name}</span>
+                    <span class="dash-cat-right">
+                        <span class="dash-cat-pct">${pct}%</span>
+                        <span class="dash-cat-sum">${sumStr} ₽</span>
+                    </span>
+                </div>
+                <div class="dash-cat-bar-wrap">
+                    <div class="dash-cat-bar" style="width:${barPct}%"></div>
+                </div>
+            </div>
+        `;
+    }).join('');
 }
 
 async function checkApiConnection() {

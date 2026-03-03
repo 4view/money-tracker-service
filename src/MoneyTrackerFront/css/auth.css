@@ -336,3 +336,177 @@ input[type="password"]::placeholder {
         margin-top: 30px;
     }
 }
+
+/* ─── Стили для forgotPassword.html и resetPassword.html ─────────────────── */
+
+.auth-wrapper {
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+    background: var(--auth-bg);
+    transition: background 0.3s ease;
+}
+
+/* Логотип и заголовок */
+.auth-logo {
+    font-size: 48px;
+    text-align: center;
+    margin-bottom: 8px;
+}
+
+.auth-title {
+    text-align: center;
+    font-size: 24px;
+    font-weight: 700;
+    background: var(--auth-button-gradient);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    margin-bottom: 24px;
+}
+
+.auth-heading {
+    color: var(--auth-text-primary);
+    font-size: 22px;
+    font-weight: 700;
+    text-align: center;
+    margin-bottom: 8px;
+}
+
+.auth-subtitle {
+    color: var(--auth-text-secondary);
+    font-size: 14px;
+    text-align: center;
+    margin-bottom: 24px;
+    line-height: 1.5;
+}
+
+/* Форма */
+.auth-form {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.form-label {
+    display: block;
+    margin-bottom: 6px;
+    color: var(--auth-text-primary);
+    font-weight: 500;
+    font-size: 14px;
+}
+
+.form-input {
+    width: 100%;
+    padding: 14px 16px;
+    border: 2px solid var(--auth-input-border);
+    border-radius: 12px;
+    font-size: 16px;
+    transition: all 0.3s ease;
+    background: var(--auth-input-bg);
+    color: var(--auth-text-primary);
+    box-sizing: border-box;
+}
+
+.form-input:focus {
+    outline: none;
+    border-color: var(--auth-input-focus);
+    background: var(--auth-card-bg);
+    box-shadow: 0 0 0 4px rgba(102, 126, 234, 0.1);
+}
+
+.form-input::placeholder {
+    color: var(--auth-text-secondary);
+    font-size: 14px;
+}
+
+/* Кнопка */
+.auth-btn {
+    display: block;
+    width: 100%;
+    padding: 16px;
+    background: var(--auth-button-gradient);
+    color: white;
+    border: none;
+    border-radius: 12px;
+    font-size: 17px;
+    font-weight: 600;
+    cursor: pointer;
+    text-align: center;
+    text-decoration: none;
+    transition: all 0.3s ease;
+    margin-top: 12px;
+    box-shadow: 0 4px 15px var(--auth-button-shadow);
+    box-sizing: border-box;
+}
+
+.auth-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px var(--auth-button-shadow);
+}
+
+.auth-btn:active {
+    transform: translateY(0);
+}
+
+.auth-btn:disabled {
+    opacity: 0.7;
+    cursor: not-allowed;
+    transform: none;
+}
+
+/* Ссылка внизу */
+.auth-link {
+    display: block;
+    text-align: center;
+    margin-top: 20px;
+    color: var(--auth-link-color);
+    font-size: 14px;
+    text-decoration: none;
+    font-weight: 500;
+}
+
+.auth-link:hover {
+    text-decoration: underline;
+}
+
+/* Ошибка в форме */
+.auth-error {
+    background: var(--auth-error-bg);
+    color: var(--auth-error-color);
+    padding: 12px 14px;
+    border-radius: 10px;
+    font-size: 14px;
+    font-weight: 500;
+    border-left: 4px solid var(--auth-error-color);
+    margin-top: 4px;
+}
+
+/* Иконка состояния (успех / ошибка) */
+.auth-icon {
+    width: 64px;
+    height: 64px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 28px;
+    margin: 0 auto 16px;
+}
+
+.auth-icon.success {
+    background: var(--auth-success-bg);
+    color: var(--auth-success-color);
+}
+
+.auth-icon.error {
+    background: var(--auth-error-bg);
+    color: var(--auth-error-color);
+}
+
+/* Утилита */
+.hidden {
+    display: none !important;
+}
