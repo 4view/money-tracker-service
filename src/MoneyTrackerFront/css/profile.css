@@ -1,0 +1,292 @@
+/* profile.css — страница профиля */
+
+/* ─── Герой: аватар + имя ─────────────────────────────────────────── */
+.profile-hero {
+    background: var(--card-bg);
+    border-radius: 16px;
+    padding: 18px 16px;
+    margin-bottom: 12px;
+    box-shadow: 0 2px 8px var(--shadow-color);
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    transition: background-color 0.3s ease;
+}
+
+.profile-avatar {
+    width: 60px;
+    height: 60px;
+    border-radius: 50%;
+    background: var(--accent-color);
+    color: white;
+    font-size: 26px;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    box-shadow: 0 2px 8px rgba(33, 150, 243, 0.35);
+}
+
+.profile-hero-info {
+    flex: 1;
+    min-width: 0;
+}
+
+.profile-hero-name {
+    font-size: 18px;
+    font-weight: 700;
+    color: var(--text-primary);
+    margin-bottom: 3px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.profile-hero-email {
+    font-size: 13px;
+    color: var(--text-secondary);
+    margin-bottom: 2px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.profile-hero-date {
+    font-size: 12px;
+    color: var(--text-tertiary);
+}
+
+/* ─── Карточка-секция ─────────────────────────────────────────────── */
+.profile-card {
+    background: var(--card-bg);
+    border-radius: 16px;
+    padding: 16px;
+    margin-bottom: 12px;
+    box-shadow: 0 2px 8px var(--shadow-color);
+    transition: background-color 0.3s ease;
+}
+
+.profile-card-title {
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.07em;
+    color: var(--text-tertiary);
+    margin-bottom: 14px;
+}
+
+/* ─── Строка поле-значение ────────────────────────────────────────── */
+.profile-field-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    padding: 6px 0;
+    border-bottom: 1px solid var(--border-color);
+    margin-bottom: 12px;
+}
+
+.profile-field-row:last-child {
+    border-bottom: none;
+    margin-bottom: 0;
+}
+
+.profile-field-label {
+    font-size: 13px;
+    color: var(--text-secondary);
+    font-weight: 500;
+    flex-shrink: 0;
+}
+
+.profile-field-value {
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--text-primary);
+    text-align: right;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    max-width: 65%;
+}
+
+.profile-badge-ok {
+    color: var(--success-color);
+    font-size: 13px;
+}
+
+/* ─── Метка ───────────────────────────────────────────────────────── */
+.profile-label {
+    display: block;
+    font-size: 13px;
+    color: var(--text-secondary);
+    font-weight: 500;
+    margin-bottom: 6px;
+    margin-top: 14px;
+}
+
+/* ─── Обёртка: input + кнопка показать/скрыть ────────────────────── */
+.profile-input-wrap {
+    position: relative;
+    margin-bottom: 2px;
+}
+
+.profile-input-wrap .profile-input {
+    padding-right: 44px;
+}
+
+.toggle-password {
+    position: absolute;
+    right: 10px;
+    top: 50%;
+    transform: translateY(-50%);
+    background: none;
+    border: none;
+    font-size: 16px;
+    cursor: pointer;
+    color: var(--text-tertiary);
+    padding: 4px;
+    line-height: 1;
+    transition: color 0.2s;
+}
+
+.toggle-password:hover {
+    color: var(--text-primary);
+}
+
+/* ─── Поле ввода ──────────────────────────────────────────────────── */
+.profile-input {
+    width: 100%;
+    padding: 12px 14px;
+    border: 1.5px solid var(--input-border);
+    border-radius: 12px;
+    font-size: 15px;
+    background: var(--input-bg);
+    color: var(--text-primary);
+    transition: all 0.2s ease;
+    box-sizing: border-box;
+    -webkit-appearance: none;
+    appearance: none;
+}
+
+.profile-input:focus {
+    outline: none;
+    border-color: var(--accent-color);
+    background: var(--card-bg);
+    box-shadow: 0 0 0 3px rgba(33, 150, 243, 0.12);
+}
+
+.profile-input::placeholder {
+    color: var(--text-tertiary);
+    font-size: 14px;
+}
+
+/* ─── Индикатор надёжности пароля ────────────────────────────────── */
+.password-strength {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin: 8px 0 2px;
+}
+
+.password-strength.hidden {
+    display: none;
+}
+
+.strength-bar {
+    flex: 1;
+    height: 5px;
+    background: var(--border-color);
+    border-radius: 4px;
+    overflow: hidden;
+}
+
+.strength-fill {
+    height: 100%;
+    width: 0%;
+    border-radius: 4px;
+    transition: width 0.3s ease, background-color 0.3s ease;
+}
+
+.strength-label {
+    font-size: 12px;
+    font-weight: 600;
+    min-width: 54px;
+    text-align: right;
+}
+
+/* ─── Ряд с кнопкой ──────────────────────────────────────────────── */
+.profile-btn-row {
+    margin-top: 16px;
+}
+
+.profile-btn-save {
+    width: 100%;
+    padding: 14px;
+    background: var(--accent-color);
+    color: white;
+    border: none;
+    border-radius: 12px;
+    font-size: 15px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    box-shadow: 0 2px 8px rgba(33, 150, 243, 0.25);
+}
+
+.profile-btn-save:active {
+    background: var(--accent-hover);
+    transform: scale(0.98);
+}
+
+.profile-btn-save:disabled,
+.profile-btn-save.loading {
+    opacity: 0.6;
+    cursor: not-allowed;
+    transform: none;
+}
+
+/* ─── Фидбек ошибка / успех ──────────────────────────────────────── */
+.profile-feedback {
+    margin-top: 10px;
+    padding: 10px 14px;
+    border-radius: 10px;
+    font-size: 13px;
+    font-weight: 500;
+    line-height: 1.4;
+}
+
+.profile-feedback.hidden {
+    display: none;
+}
+
+.profile-feedback.success {
+    background: var(--auth-success-bg, #d4edda);
+    color: var(--success-color);
+    border-left: 3px solid var(--success-color);
+}
+
+.profile-feedback.error {
+    background: var(--auth-error-bg, #fee2e2);
+    color: var(--danger-color);
+    border-left: 3px solid var(--danger-color);
+}
+
+/* ─── Карточка аккаунта — плотнее ────────────────────────────────── */
+.profile-card-info .profile-field-row {
+    margin-bottom: 0;
+    padding: 8px 0;
+}
+
+/* ─── Адаптация ───────────────────────────────────────────────────── */
+@media (max-width: 360px) {
+    .profile-avatar {
+        width: 48px;
+        height: 48px;
+        font-size: 20px;
+    }
+
+    .profile-hero-name {
+        font-size: 16px;
+    }
+}

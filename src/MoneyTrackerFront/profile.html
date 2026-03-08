@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="ru">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Профиль</title>
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="css/profile.css">
+</head>
+
+<body>
+    <div class="container">
+        <div class="header">
+            <div class="nav-header">
+                <a href="Index.html" class="back-btn">Назад</a>
+                <h1>Профиль</h1>
+                <div class="user-info">
+                    <button class="theme-toggle" id="theme-toggle">🌙</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Аватар -->
+        <div class="profile-hero">
+            <div class="profile-avatar" id="profile-avatar">?</div>
+            <div class="profile-hero-info">
+                <div class="profile-hero-name" id="profile-hero-name">Загрузка...</div>
+                <div class="profile-hero-email" id="profile-hero-email"></div>
+                <div class="profile-hero-date" id="profile-hero-date"></div>
+            </div>
+        </div>
+
+        <!-- Имя пользователя -->
+        <div class="profile-card">
+            <div class="profile-card-title">Имя пользователя</div>
+            <div class="profile-field-row">
+                <span class="profile-field-label">Текущее</span>
+                <span class="profile-field-value" id="current-username">—</span>
+            </div>
+            <label class="profile-label" for="new-username">Новое имя</label>
+            <input type="text" id="new-username" class="profile-input" placeholder="Введите новое имя" maxlength="50">
+            <div class="profile-btn-row">
+                <button class="profile-btn-save" id="save-username-btn">Сохранить</button>
+            </div>
+            <div id="username-feedback" class="profile-feedback hidden"></div>
+        </div>
+
+        <!-- Пароль -->
+        <div class="profile-card">
+            <div class="profile-card-title">Изменить пароль</div>
+
+            <label class="profile-label" for="current-password">Текущий пароль</label>
+            <div class="profile-input-wrap">
+                <input type="password" id="current-password" class="profile-input" placeholder="Текущий пароль"
+                    autocomplete="current-password">
+                <button class="toggle-password" data-target="current-password">👁</button>
+            </div>
+
+            <label class="profile-label" for="new-password">Новый пароль</label>
+            <div class="profile-input-wrap">
+                <input type="password" id="new-password" class="profile-input" placeholder="Минимум 6 символов"
+                    autocomplete="new-password">
+                <button class="toggle-password" data-target="new-password">👁</button>
+            </div>
+
+            <label class="profile-label" for="confirm-password">Подтвердите пароль</label>
+            <div class="profile-input-wrap">
+                <input type="password" id="confirm-password" class="profile-input" placeholder="Повторите новый пароль"
+                    autocomplete="new-password">
+                <button class="toggle-password" data-target="confirm-password">👁</button>
+            </div>
+
+            <div class="password-strength hidden" id="password-strength">
+                <div class="strength-bar">
+                    <div class="strength-fill" id="strength-fill"></div>
+                </div>
+                <span class="strength-label" id="strength-label"></span>
+            </div>
+
+            <div class="profile-btn-row">
+                <button class="profile-btn-save" id="save-password-btn">Сохранить пароль</button>
+            </div>
+            <div id="password-feedback" class="profile-feedback hidden"></div>
+        </div>
+
+        <!-- Информация -->
+        <div class="profile-card profile-card-info">
+            <div class="profile-card-title">Аккаунт</div>
+            <div class="profile-field-row">
+                <span class="profile-field-label">Email</span>
+                <span class="profile-field-value" id="info-email">—</span>
+            </div>
+            <div class="profile-field-row">
+                <span class="profile-field-label">Регистрация</span>
+                <span class="profile-field-value" id="info-created">—</span>
+            </div>
+            <div class="profile-field-row">
+                <span class="profile-field-label">Email</span>
+                <span class="profile-field-value profile-badge-ok">✓ Подтверждён</span>
+            </div>
+        </div>
+    </div>
+
+    <script src="js/config.js"></script>
+    <script src="js/toast.js"></script>
+    <script src="js/theme.js"></script>
+    <script src="js/auth-check.js"></script>
+    <script src="js/profile.js"></script>
+</body>
+
+</html>

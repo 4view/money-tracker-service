@@ -9,6 +9,8 @@
     <!-- Подключение CSS -->
     <link rel="stylesheet" href="css/style.css">
     <link rel="stylesheet" href="css/expenses.css">
+    <!-- SheetJS для экспорта в Excel -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 </head>
 
 <body>
@@ -19,7 +21,8 @@
                 <a href="index.html" class="back-btn">Назад</a>
                 <h1>Все траты</h1>
                 <div class="user-info" id="user-info">
-                    <span class="user-name" id="user-name"></span>
+                    <a href="profile.html" class="user-name" id="user-name"
+                        style="text-decoration:none;color:var(--text-primary);"></a>
                 </div>
             </div>
         </div>
@@ -84,7 +87,8 @@
 
         <!-- Экспорт -->
         <div class="export-row">
-            <button class="export-btn" id="export-csv">⬇ Скачать CSV</button>
+            <button class="export-btn" id="export-csv">⬇ CSV</button>
+            <button class="export-btn" id="export-excel">⬇ Excel</button>
         </div>
 
         <!-- Список трат -->
@@ -145,6 +149,7 @@
         </div>
     </div>
 
+    <script src="js/config.js"></script>
     <script src="js/toast.js"></script>
     <script src="js/theme.js"></script>
     <script src="js/auth-check.js"></script>

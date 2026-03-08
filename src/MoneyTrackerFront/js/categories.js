@@ -1,6 +1,3 @@
-// Конфигурация API
-const API_BASE_URL = 'http://localhost:5183/api';
-
 // Состояние приложения
 let categories = [];
 let currentEditId = null;

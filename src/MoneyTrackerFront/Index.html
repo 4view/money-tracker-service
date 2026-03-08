@@ -24,7 +24,7 @@
                 </div>
                 <div class="user-info" id="user-info">
                     <button class="theme-toggle" id="theme-toggle">🌙</button>
-                    <span class="user-name" id="user-name"></span>
+                    <a href="profile.html" class="user-name" id="user-name" style="text-decoration:none;color:var(--text-primary);"></a>
                     <button class="logout-btn" id="logout-btn">Выйти</button>
                 </div>
             </div>
@@ -61,7 +61,10 @@
         <div class="result-container hidden" id="result-container">
             <div class="result-header">
                 <h2>Результат сканирования</h2>
-                <span class="status" id="scan-status">Ожидание</span>
+                <div style="display:flex;align-items:center;gap:8px;">
+                    <span class="status" id="scan-status">Ожидание</span>
+                    <button class="close-result-btn" id="close-result-btn" title="Закрыть">✕</button>
+                </div>
             </div>
 
             <div class="expense-details" id="expense-details">
@@ -139,6 +142,7 @@
     </div>
 
     <!-- Подключение JavaScript -->
+    <script src="js/config.js"></script>
     <script src="js/toast.js"></script>
     <script src="js/theme.js"></script>
     <script src="js/auth-check.js"></script>

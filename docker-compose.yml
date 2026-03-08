@@ -1,0 +1,59 @@
+services:
+
+  # ── PostgreSQL ──────────────────────────────────────────────────────────────
+  db:
+    image: postgres:16-alpine
+    container_name: moneytracker_db
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: MTSDb
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    ports:
+      - "5433:5432"          # убери эту строку если не нужен прямой доступ к БД
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  # ── Backend API ─────────────────────────────────────────────────────────────
+  api:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: moneytracker_api
+    restart: unless-stopped
+    depends_on:
+      db:
+        condition: service_healthy
+    ports:
+      - "8080:8080"
+    environment:
+      ASPNETCORE_ENVIRONMENT: Production
+      ConnectionStrings__MTSDb: "Host=db;Port=5432;Database=MTSDb;Username=postgres;Password=${DB_PASSWORD}"
+      Jwt__Key: ${JWT_KEY}
+      Jwt__Issuer: MoneyTracker
+      Jwt__Audience: MoneyTrackerClient
+      Email__SmtpHost: smtp.gmail.com
+      Email__SmtpPort: 465
+      Email__FromAddress: ${EMAIL_ADDRESS}
+      Email__FromName: MoneyTracker
+      Email__Password: ${EMAIL_PASSWORD}
+      Frontend__Url: http://localhost:5500
+
+  # ── Frontend (Nginx) ────────────────────────────────────────────────────────
+  frontend:
+    image: nginx:alpine
+    container_name: moneytracker_frontend
+    restart: unless-stopped
+    volumes:
+      - ./src/MoneyTrackerFront:/usr/share/nginx/html:ro
+      - ./nginx.conf:/etc/nginx/conf.d/default.conf:ro
+    ports:
+      - "5500:80"
+
+volumes:
+  postgres_data:

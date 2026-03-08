@@ -1,6 +1,3 @@
-// Конфигурация API - измените порт если нужно
-const API_BASE_URL = 'http://localhost:5183/api';
-
 // Состояние приложения
 let html5QrCode = null;
 let lastScannedData = [];
@@ -222,6 +219,15 @@ function initializeEventListeners() {
     if (addManualBtn) {
         addManualBtn.addEventListener('click', function () {
             openManualExpenseForm();
+        });
+    }
+
+    // Кнопка закрытия формы результата/ручного ввода
+    const closeResultBtn = document.getElementById('close-result-btn');
+    if (closeResultBtn) {
+        closeResultBtn.addEventListener('click', function () {
+            const container = document.getElementById('result-container');
+            if (container) container.classList.add('hidden');
         });
     }
 
@@ -612,6 +618,9 @@ function displayScanResult(qrData) {
     if (!container || !details || !status) return;
 
     container.classList.remove('hidden');
+    // При QR-режиме показываем кнопку 'Новый скан'
+    const _scanNewQr = document.getElementById('scan-new');
+    if (_scanNewQr) _scanNewQr.classList.remove('hidden');
 
     status.textContent = '✓ Требуется заполнение';
     status.className = 'status warning';
@@ -735,6 +744,10 @@ function displayManualForm(data) {
 
     container.classList.remove('hidden');
     if (header) header.textContent = 'Ручной ввод';
+
+    // При ручном вводе скрываем кнопку "Новый скан"
+    const scanNewBtn = document.getElementById('scan-new');
+    if (scanNewBtn) scanNewBtn.classList.add('hidden');
 
     const hasCategory = !!data.CategoryId;
     const hasDescription = !!(data.Description && data.Description.trim());

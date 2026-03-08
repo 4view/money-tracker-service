@@ -1,5 +1,3 @@
-const API_BASE_URL = 'http://localhost:5183/api';
-
 // Обработка формы регистрации
 const registerForm = document.getElementById('register-form');
 if (registerForm) {

@@ -1,7 +1,3 @@
-// limits.js — управление лимитами категорий
-
-const API_BASE_URL = 'http://localhost:5183/api';
-
 let allCategories = [];
 let allLimits = [];       // AddedLimitDto[]  (id, categoryId, limit)
 let calculatedLimits = {}; // { limitId: ReturnedLimitDto }

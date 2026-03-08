@@ -1,4 +1,13 @@
-const API_BASE_URL = 'http://localhost:5183/api';
+// ─── Утилита: защита от XSS ─────────────────────────────────────────────────
+function escapeHtml(str) {
+    if (!str) return '';
+    return String(str)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#039;');
+}
 
 // Состояние приложения
 let allExpenses = [];
@@ -226,8 +235,8 @@ function displayExpenses() {
             const showEntryDate = entryDate && Math.abs(entryDate - purchaseDate) > 60000;
 
             const category = categories.find(c => String(c.id) === String(expense.categoryId));
-            const categoryName = category ? category.name : 'Другое';
-            const description = expense.description || '';
+            const categoryName = escapeHtml(category ? category.name : 'Другое');
+            const description = escapeHtml(expense.description || '');
 
             return `
         <div class="expense-item" data-id="${expense.id}">
@@ -451,12 +460,64 @@ function exportToCsv() {
     showToast(`Экспортировано ${filteredExpenses.length} трат`, 'success');
 }
 
+
+
+// ─── Экспорт в Excel (xlsx) ───────────────────────────────────────────────────
+function exportToExcel() {
+    if (filteredExpenses.length === 0) {
+        showToast('Нет трат для экспорта', 'warning');
+        return;
+    }
+
+    const rows = filteredExpenses.map(expense => {
+        const date = new Date(expense.time).toLocaleString('ru-RU', {
+            day: '2-digit', month: '2-digit', year: 'numeric',
+            hour: '2-digit', minute: '2-digit'
+        }).replace(',', '');
+
+        const category = categories.find(c => String(c.id) === String(expense.categoryId));
+        const categoryName = category ? category.name : 'Другое';
+
+        return {
+            'Дата': date,
+            'Сумма (₽)': expense.sum,
+            'Категория': categoryName,
+            'Описание': expense.description || ''
+        };
+    });
+
+    const ws = XLSX.utils.json_to_sheet(rows);
+
+    // Ширина столбцов
+    ws['!cols'] = [
+        { wch: 18 }, // Дата
+        { wch: 12 }, // Сумма
+        { wch: 20 }, // Категория
+        { wch: 40 }, // Описание
+    ];
+
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, 'Траты');
+
+    const fileName = `траты_${new Date().toLocaleDateString('ru-RU').replace(/\./g, '-')}.xlsx`;
+    XLSX.writeFile(wb, fileName);
+
+    showToast(`Экспортировано ${filteredExpenses.length} трат`, 'success');
+}
+
+window.exportToExcel = exportToExcel;
+
 // Инициализация обработчиков
 function initializeEventListeners() {
     // Экспорт в CSV
     const exportBtn = document.getElementById('export-csv');
     if (exportBtn) {
         exportBtn.addEventListener('click', exportToCsv);
+    }
+
+    const exportExcelBtn = document.getElementById('export-excel');
+    if (exportExcelBtn) {
+        exportExcelBtn.addEventListener('click', exportToExcel);
     }
 
     // Применить фильтры

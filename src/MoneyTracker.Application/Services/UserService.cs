@@ -246,4 +246,74 @@ public class UserService : IUserService
         };
         return tokenHandler.WriteToken(tokenHandler.CreateToken(tokenDescriptor));
     }
+
+    public async Task<ProfileDto> GetProfileAsync(Guid userId, CancellationToken ct)
+    {
+        var user =
+            await _userRepo.GetByIdAsync(userId, ct)
+            ?? throw new ResponseException(ErrorType.NotFound, "Пользователь не найден");
+
+        return new ProfileDto
+        {
+            UserId = user.Id,
+            UserName = user.UserName,
+            Email = user.Email,
+            CreatedAt = user.CreatedAt,
+        };
+    }
+
+    public async Task<ProfileDto> UpdateUserNameAsync(
+        Guid userId,
+        UpdateProfileDto dto,
+        CancellationToken ct
+    )
+    {
+        if (string.IsNullOrWhiteSpace(dto.UserName))
+            throw new ResponseException(
+                ErrorType.Validation,
+                "Имя пользователя не может быть пустым"
+            );
+
+        var user =
+            await _userRepo.GetByIdAsync(userId, ct)
+            ?? throw new ResponseException(ErrorType.NotFound, "Пользователь не найден");
+
+        if (
+            !string.Equals(user.UserName, dto.UserName, StringComparison.OrdinalIgnoreCase)
+            && await _userRepo.UsernameExistsAsync(dto.UserName, ct)
+        )
+            throw new ResponseException(ErrorType.Conflict, $"Имя '{dto.UserName}' уже занято");
+
+        user.UserName = dto.UserName;
+        user.UpdatedAt = DateTime.UtcNow;
+        await _userRepo.UpdateAsync(user, ct);
+
+        return new ProfileDto
+        {
+            UserId = user.Id,
+            UserName = user.UserName,
+            Email = user.Email,
+            CreatedAt = user.CreatedAt,
+        };
+    }
+
+    public async Task ChangePasswordAsync(Guid userId, ChangePasswordDto dto, CancellationToken ct)
+    {
+        if (string.IsNullOrWhiteSpace(dto.NewPassword) || dto.NewPassword.Length < 6)
+            throw new ResponseException(
+                ErrorType.Validation,
+                "Новый пароль должен содержать минимум 6 символов"
+            );
+
+        var user =
+            await _userRepo.GetByIdAsync(userId, ct)
+            ?? throw new ResponseException(ErrorType.NotFound, "Пользователь не найден");
+
+        if (!VerifyPassword(dto.CurrentPassword, user.PasswordHash))
+            throw new ResponseException(ErrorType.Validation, "Неверный текущий пароль");
+
+        user.PasswordHash = HashPassword(dto.NewPassword);
+        user.UpdatedAt = DateTime.UtcNow;
+        await _userRepo.UpdateAsync(user, ct);
+    }
 }
