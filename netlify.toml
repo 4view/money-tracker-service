@@ -1,0 +1,13 @@
+[build]
+  base    = "src/MoneyTrackerFront"
+  publish = "src/MoneyTrackerFront"
+
+[[redirects]]
+  from = "/"
+  to   = "/Index.html"
+  status = 200
+
+[[redirects]]
+  from = "/*"
+  to   = "/Index.html"
+  status = 200
