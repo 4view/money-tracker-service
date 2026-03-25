@@ -1,7 +1,7 @@
 // config.js — единая точка конфигурации для всего фронтенда
 // Подключается первым скриптом на каждой странице.
 
-const API_BASE_URL = 'money-tracker-service-production.up.railway.app';
+const API_BASE_URL = 'https://money-tracker-service-production.up.railway.app/api';
 
 /**
  * Экранирует HTML-спецсимволы для защиты от XSS.
