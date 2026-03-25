@@ -1,5 +1,4 @@
 [build]
-  base    = "src/MoneyTrackerFront"
   publish = "src/MoneyTrackerFront"
 
 [[redirects]]
