@@ -101,7 +101,7 @@ public class EmailService : IEmailService
         message.Body = new TextPart("html") { Text = htmlBody };
 
         using var client = new SmtpClient();
-        await client.ConnectAsync(smtpHost, smtpPort, SecureSocketOptions.StartTls, ct);
+        await client.ConnectAsync(smtpHost, smtpPort, SecureSocketOptions.SslOnConnect, ct);
         await client.AuthenticateAsync(fromAddress, password, ct);
         await client.SendAsync(message, ct);
         await client.DisconnectAsync(true, ct);

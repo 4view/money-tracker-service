@@ -119,16 +119,19 @@ async function loadCategories() {
 }
 
 // Загрузка трат
-async function loadExpenses() {
+async function loadExpenses(startDate, endDate) {
     try {
         const expensesList = document.getElementById('expenses-list');
         if (!expensesList) return;
 
         expensesList.innerHTML = '<div class="loading-spinner">Загрузка...</div>';
 
-        // Загружаем за последние 3 месяца по умолчанию
-        const endDate = Date.now();
-        const startDate = endDate - (90 * 24 * 60 * 60 * 1000); // 90 дней назад
+        // Если диапазон не передан — грузим текущий год целиком по умолчанию
+        if (!startDate || !endDate) {
+            const now = new Date();
+            startDate = new Date(now.getFullYear(), 0, 1).getTime();
+            endDate = new Date(now.getFullYear(), 11, 31, 23, 59, 59, 999).getTime();
+        }
 
         console.log(`Загрузка трат с ${startDate} по ${endDate}`);
 
@@ -138,16 +141,18 @@ async function loadExpenses() {
 
         if (!response) return;
 
-        if (response.ok) {
+        if (response.status === 204) {
+            console.log('Нет трат за выбранный период');
+            allExpenses = [];
+            filteredExpenses = [];
+            displayExpenses();
+            updateStats();
+        } else if (response.ok) {
             const data = await response.json();
             console.log('Загруженные траты:', data);
             allExpenses = Array.isArray(data) ? data : [];
             filteredExpenses = [...allExpenses];
-            applyFilters();
-        } else if (response.status === 204) {
-            console.log('Нет трат за выбранный период');
-            allExpenses = [];
-            filteredExpenses = [];
+            currentPage = 1;
             displayExpenses();
             updateStats();
         } else {
@@ -180,19 +185,43 @@ function populateYearFilter() {
 }
 
 // Применение фильтров
-function applyFilters() {
-    const month = document.getElementById('month-filter')?.value;
-    const year = document.getElementById('year-filter')?.value;
-    const categoryId = document.getElementById('category-filter')?.value;
+async function applyFilters() {
+    const month = parseInt(document.getElementById('month-filter')?.value) || null;
+    const year = parseInt(document.getElementById('year-filter')?.value) || null;
+    const categoryId = document.getElementById('category-filter')?.value || null;
 
+    // Вычисляем диапазон дат для запроса к API
+    let startDate, endDate;
+    const now = new Date();
+
+    if (year && month) {
+        // Конкретный месяц конкретного года
+        startDate = new Date(year, month - 1, 1).getTime();
+        endDate = new Date(year, month, 0, 23, 59, 59, 999).getTime();
+    } else if (year) {
+        // Весь год
+        startDate = new Date(year, 0, 1).getTime();
+        endDate = new Date(year, 11, 31, 23, 59, 59, 999).getTime();
+    } else if (month) {
+        // Указан только месяц — ищем за последние 5 лет
+        startDate = new Date(now.getFullYear() - 5, 0, 1).getTime();
+        endDate = new Date(now.getFullYear(), 11, 31, 23, 59, 59, 999).getTime();
+    } else {
+        // Ничего не выбрано — текущий год
+        startDate = new Date(now.getFullYear(), 0, 1).getTime();
+        endDate = new Date(now.getFullYear(), 11, 31, 23, 59, 59, 999).getTime();
+    }
+
+    // Загружаем с API нужный диапазон
+    await loadExpenses(startDate, endDate);
+
+    // Теперь фильтруем по категории и месяцу (если год не указан) на клиенте
     filteredExpenses = allExpenses.filter(expense => {
         const date = new Date(expense.time);
         const expenseMonth = date.getMonth() + 1;
-        const expenseYear = date.getFullYear();
 
-        if (month && expenseMonth !== parseInt(month)) return false;
-        if (year && expenseYear !== parseInt(year)) return false;
-        if (categoryId && expense.categoryId !== categoryId) return false;
+        if (month && expenseMonth !== month) return false;
+        if (categoryId && String(expense.categoryId) !== String(categoryId)) return false;
 
         return true;
     });
@@ -529,7 +558,7 @@ function initializeEventListeners() {
     // Сбросить фильтры
     const resetBtn = document.getElementById('reset-filters');
     if (resetBtn) {
-        resetBtn.addEventListener('click', function () {
+        resetBtn.addEventListener('click', async function () {
             const monthFilter = document.getElementById('month-filter');
             const yearFilter = document.getElementById('year-filter');
             const categoryFilter = document.getElementById('category-filter');

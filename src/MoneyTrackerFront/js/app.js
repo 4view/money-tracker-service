@@ -871,7 +871,7 @@ async function saveExpense(qrData) {
 
         // Для отправки на сервер используем дату покупки
         const expenseToSave = {
-            Time: qrData.purchaseTime || Date.now(),
+            Time: qrData.entryTime || Date.now(),
             Sum: qrData.Sum,
             Description: qrData.Description,
             CategoryName: qrData.CategoryName
@@ -1281,7 +1281,7 @@ async function displayStatistics() {
         }
 
         let expenses = [];
-        if (response.ok) {
+        if (response.ok && response.status !== 204) {
             const data = await response.json();
             expenses = Array.isArray(data) ? data : [];
         }
@@ -1332,77 +1332,84 @@ function renderDayChart(expenses, year, month) {
     });
 
     const maxVal = Math.max(...byDay, 1);
-    const W = 300;
+
+    // Используем фиксированный viewBox — SVG растягивается через CSS
+    const W = 310;
     const H = 80;
-    const padLeft = 2;
-    const padRight = 2;
-    const padTop = 8;
-    const padBottom = 2;
+    const padLeft = 4;
+    const padRight = 4;
+    const padTop = 10;
+    const padBottom = 4;
     const chartW = W - padLeft - padRight;
     const chartH = H - padTop - padBottom;
-    const barW = chartW / daysInMonth;
 
-    // Линия тренда (polyline через центры баров)
-    const points = byDay.map((val, i) => {
-        const x = padLeft + i * barW + barW / 2;
-        const y = padTop + chartH - (val / maxVal) * chartH;
-        return `${x.toFixed(1)},${y.toFixed(1)}`;
-    }).join(' ');
+    // Шаг между точками
+    const step = chartW / (daysInMonth - 1);
 
-    // Зона под линией
-    const firstX = (padLeft + barW / 2).toFixed(1);
-    const lastX = (padLeft + (daysInMonth - 1) * barW + barW / 2).toFixed(1);
-    const bottomY = (padTop + chartH).toFixed(1);
-
-    const areaPoints = `${firstX},${bottomY} ${points} ${lastX},${bottomY}`;
-
-    // Сегодняшний день — выделяем
+    // Сегодняшний день
     const today = new Date();
     const todayIdx = (today.getMonth() === month && today.getFullYear() === year)
         ? today.getDate() - 1 : -1;
 
-    // Рисуем бары
-    const bars = byDay.map((val, i) => {
-        const x = padLeft + i * barW;
-        const barH = val > 0 ? Math.max((val / maxVal) * chartH, 2) : 0;
-        const y = padTop + chartH - barH;
+    // Координаты точек линии
+    const pts = byDay.map((val, i) => {
+        const x = padLeft + i * step;
+        const y = padTop + chartH - (val / maxVal) * chartH;
+        return { x, y, val };
+    });
+
+    const polylinePoints = pts.map(p => `${p.x.toFixed(1)},${p.y.toFixed(1)}`).join(' ');
+
+    // Зона под линией
+    const areaPoints =
+        `${pts[0].x.toFixed(1)},${(padTop + chartH).toFixed(1)} ` +
+        polylinePoints +
+        ` ${pts[pts.length - 1].x.toFixed(1)},${(padTop + chartH).toFixed(1)}`;
+
+    // Тонкие вертикальные штрихи для дней с тратами
+    const ticks = pts.map((p, i) => {
+        if (p.val <= 0) return '';
         const isToday = i === todayIdx;
-        const opacity = val > 0 ? (isToday ? '1' : '0.35') : '0';
-        return `<rect x="${x.toFixed(1)}" y="${y.toFixed(1)}" width="${(barW - 0.5).toFixed(1)}" height="${barH.toFixed(1)}" rx="1" fill="var(--accent-color)" opacity="${opacity}"/>`;
+        const tickH = Math.max((p.val / maxVal) * chartH * 0.18, 2);
+        const tickY = padTop + chartH - tickH;
+        return `<line x1="${p.x.toFixed(1)}" y1="${tickY.toFixed(1)}" x2="${p.x.toFixed(1)}" y2="${(padTop + chartH).toFixed(1)}"
+            stroke="var(--accent-color)" stroke-width="${isToday ? 2 : 1}" opacity="${isToday ? 0.9 : 0.35}"/>`;
     }).join('');
+
+    // Точка сегодня
+    const todayDot = todayIdx >= 0 ? (() => {
+        const p = pts[todayIdx];
+        return `<circle cx="${p.x.toFixed(1)}" cy="${p.y.toFixed(1)}" r="3.5"
+            fill="var(--accent-color)" stroke="var(--card-bg)" stroke-width="2"/>`;
+    })() : '';
+
+    svg.setAttribute('viewBox', `0 0 ${W} ${H}`);
+    svg.setAttribute('preserveAspectRatio', 'none');
 
     svg.innerHTML = `
         <defs>
             <linearGradient id="areaGrad" x1="0" y1="0" x2="0" y2="1">
-                <stop offset="0%" stop-color="var(--accent-color)" stop-opacity="0.25"/>
+                <stop offset="0%" stop-color="var(--accent-color)" stop-opacity="0.2"/>
                 <stop offset="100%" stop-color="var(--accent-color)" stop-opacity="0"/>
             </linearGradient>
         </defs>
-        ${bars}
+        ${ticks}
         <polygon points="${areaPoints}" fill="url(#areaGrad)"/>
-        <polyline points="${points}" fill="none" stroke="var(--accent-color)" stroke-width="1.5" stroke-linejoin="round" stroke-linecap="round"/>
-        ${todayIdx >= 0 ? (() => {
-            const cx = padLeft + todayIdx * barW + barW / 2;
-            const cy = padTop + chartH - (byDay[todayIdx] / maxVal) * chartH;
-            return `<circle cx="${cx.toFixed(1)}" cy="${cy.toFixed(1)}" r="3" fill="var(--accent-color)" stroke="var(--card-bg)" stroke-width="1.5"/>`;
-        })() : ''}
+        <polyline points="${polylinePoints}" fill="none" stroke="var(--accent-color)"
+            stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/>
+        ${todayDot}
     `;
 
-    // Метки дней под графиком (показываем каждые ~5 дней)
+    // Метки дней
     labelsEl.innerHTML = '';
-    labelsEl.style.display = 'flex';
-    labelsEl.style.justifyContent = 'space-between';
-    labelsEl.style.padding = '2px 2px 0';
+    labelsEl.style.cssText = 'display:flex; justify-content:space-between; padding:2px 4px 0;';
 
-    const step = daysInMonth <= 15 ? 2 : 5;
-    for (let i = 0; i < daysInMonth; i += step) {
+    const labelStep = daysInMonth <= 15 ? 2 : 5;
+    for (let i = 0; i < daysInMonth; i += labelStep) {
         const span = document.createElement('span');
         span.textContent = i + 1;
-        span.style.cssText = `font-size:10px; color:var(--text-tertiary); flex:${step}; text-align:center;`;
-        if (i === todayIdx || (todayIdx >= i && todayIdx < i + step)) {
-            span.style.color = 'var(--accent-color)';
-            span.style.fontWeight = '700';
-        }
+        const isNearToday = todayIdx >= 0 && Math.abs(i - todayIdx) < labelStep;
+        span.style.cssText = `font-size:10px; color:${isNearToday ? 'var(--accent-color)' : 'var(--text-tertiary)'}; font-weight:${isNearToday ? '700' : '400'}; flex:${labelStep}; text-align:center;`;
         labelsEl.appendChild(span);
     }
 }

@@ -1,3 +1,5 @@
+using System.Text.Json;
+
 var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
@@ -59,8 +61,7 @@ builder.Services.AddCors(options =>
                     "http://localhost:3000",
                     "http://127.0.0.1:3000",
                     "http://localhost:5500",
-                    "http://127.0.0.1:5500",
-                    "https://stalwart-sundae-c45bd2.netlify.app" 
+                    "http://127.0.0.1:5500"
                 )
                 .AllowAnyHeader()
                 .AllowAnyMethod();
@@ -68,7 +69,11 @@ builder.Services.AddCors(options =>
     );
 });
 
-builder.Services.AddControllers();
+builder
+    .Services.AddControllers()
+    .AddJsonOptions(opt =>
+        opt.JsonSerializerOptions.PropertyNamingPolicy = JsonNamingPolicy.CamelCase
+    );
 
 var app = builder.Build();
 

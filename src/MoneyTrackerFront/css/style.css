@@ -1453,9 +1453,15 @@ body {
 
 .dash-chart {
     width: 100%;
-    height: 80px;
+    height: 90px;
     display: block;
     overflow: visible;
+}
+
+@media (min-width: 600px) {
+    .dash-chart {
+        height: 110px;
+    }
 }
 
 .dash-chart-labels {
